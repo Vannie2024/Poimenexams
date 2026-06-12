@@ -1,0 +1,138 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(STUDENT)
+  createdAt DateTime @default(now())
+
+  groupMemberships GroupMember[]
+  createdExams Exam[]
+  examAttempts ExamAttempt[]
+}
+
+model Group {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+
+  members     GroupMember[]
+}
+
+model GroupMember {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id])
+}
+
+model Exam {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  duration    Int
+  passMark    Int
+
+  createdAt   DateTime @default(now())
+
+  creatorId   String
+  creator     User     @relation(fields: [creatorId], references: [id])
+
+  questions   Question[]
+  attempts    ExamAttempt[]
+}
+
+enum QuestionType {
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+  EXPERT
+}
+
+model Question {
+  id          String        @id @default(uuid())
+  question    String
+  type        QuestionType
+  difficulty  Difficulty
+
+  createdAt   DateTime      @default(now())
+
+  examId       String?
+  exam         Exam?        @relation(fields: [examId], references: [id])
+
+  options      QuestionOption[]
+}
+
+model QuestionOption {
+  id          String   @id @default(uuid())
+
+  optionText  String
+
+  isCorrect   Boolean
+
+  questionId  String
+  question    Question @relation(fields: [questionId], references: [id])
+}
+
+model ExamAttempt {
+  id           String   @id @default(uuid())
+
+  startedAt    DateTime @default(now())
+  submittedAt  DateTime?
+
+  score        Float?
+
+  studentId    String
+  student      User     @relation(fields: [studentId], references: [id])
+
+  examId       String
+  exam         Exam     @relation(fields: [examId], references: [id])
+
+  answers      Answer[]
+}
+
+model Answer {
+  id             String        @id @default(uuid())
+
+  attemptId      String
+  attempt        ExamAttempt   @relation(fields: [attemptId], references: [id])
+
+  questionId     String
+  question       Question      @relation(fields: [questionId], references: [id])
+
+  selectedOptionId String
+  selectedOption QuestionOption @relation(fields: [selectedOptionId], references: [id])
+
+  isCorrect      Boolean
+}
