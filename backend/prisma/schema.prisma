@@ -27,8 +27,8 @@ model User {
   createdAt DateTime @default(now())
 
   groupMemberships GroupMember[]
-  createdExams Exam[]
-  examAttempts ExamAttempt[]
+  createdExams     Exam[]
+  examAttempts     ExamAttempt[]
 }
 
 model Group {
@@ -37,34 +37,40 @@ model Group {
   description String?
   createdAt   DateTime @default(now())
 
-  members     GroupMember[]
+  members GroupMember[]
+  exams   Exam[]
 }
 
 model GroupMember {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
 
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-  groupId   String
-  group     Group    @relation(fields: [groupId], references: [id])
+  groupId String
+  group   Group  @relation(fields: [groupId], references: [id])
+
+  @@unique([userId, groupId])
 }
 
 model Exam {
-  id          String   @id @default(uuid())
+  id          String  @id @default(uuid())
   title       String
   description String?
   duration    Int
   passMark    Int
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  creatorId   String
-  creator     User     @relation(fields: [creatorId], references: [id])
+  creatorId String
+  creator   User   @relation(fields: [creatorId], references: [id])
 
-  questions   Question[]
-  attempts    ExamAttempt[]
+  groupId String?
+  group   Group?  @relation(fields: [groupId], references: [id])
+
+  questions Question[]
+  attempts  ExamAttempt[]
 }
 
 enum QuestionType {
@@ -81,58 +87,72 @@ enum Difficulty {
 }
 
 model Question {
-  id          String        @id @default(uuid())
-  question    String
-  type        QuestionType
-  difficulty  Difficulty
+  id         String       @id @default(uuid())
+  question   String
+  type       QuestionType
+  difficulty Difficulty
 
-  createdAt   DateTime      @default(now())
+  createdAt DateTime @default(now())
 
-  examId       String?
-  exam         Exam?        @relation(fields: [examId], references: [id])
+  examId String?
+  exam   Exam?   @relation(fields: [examId], references: [id])
 
-  options      QuestionOption[]
+  options QuestionOption[]
+  answers Answer[]
 }
 
 model QuestionOption {
-  id          String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  optionText  String
+  optionText String
 
-  isCorrect   Boolean
+  isCorrect Boolean
 
-  questionId  String
-  question    Question @relation(fields: [questionId], references: [id])
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id])
+
+  selectedOptions SelectedOption[]
 }
 
 model ExamAttempt {
-  id           String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  startedAt    DateTime @default(now())
-  submittedAt  DateTime?
+  startedAt   DateTime  @default(now())
+  submittedAt DateTime?
 
-  score        Float?
+  score Float?
 
-  studentId    String
-  student      User     @relation(fields: [studentId], references: [id])
+  studentId String
+  student   User   @relation(fields: [studentId], references: [id])
 
-  examId       String
-  exam         Exam     @relation(fields: [examId], references: [id])
+  examId String
+  exam   Exam   @relation(fields: [examId], references: [id])
 
-  answers      Answer[]
+  answers Answer[]
 }
 
 model Answer {
-  id             String        @id @default(uuid())
+  id String @id @default(uuid())
 
-  attemptId      String
-  attempt        ExamAttempt   @relation(fields: [attemptId], references: [id])
+  attemptId String
+  attempt   ExamAttempt @relation(fields: [attemptId], references: [id])
 
-  questionId     String
-  question       Question      @relation(fields: [questionId], references: [id])
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id])
 
-  selectedOptionId String
-  selectedOption QuestionOption @relation(fields: [selectedOptionId], references: [id])
+  isCorrect Boolean
 
-  isCorrect      Boolean
+  selectedOptions SelectedOption[]
+}
+
+model SelectedOption {
+  id String @id @default(uuid())
+
+  answerId String
+  answer   Answer @relation(fields: [answerId], references: [id])
+
+  optionId String
+  option   QuestionOption @relation(fields: [optionId], references: [id])
+
+  @@unique([answerId, optionId])
 }
