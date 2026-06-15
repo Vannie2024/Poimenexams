@@ -20,15 +20,24 @@ enum UserRole {
 
 model User {
   id        String   @id @default(uuid())
+
   name      String
+
   email     String   @unique
+
+  username  String   @unique
+
   password  String
+
   role      UserRole @default(STUDENT)
+
   createdAt DateTime @default(now())
 
   groupMemberships GroupMember[]
-  createdExams     Exam[]
-  examAttempts     ExamAttempt[]
+
+  createdExams Exam[]
+
+  examAttempts ExamAttempt[]
 }
 
 model Group {
