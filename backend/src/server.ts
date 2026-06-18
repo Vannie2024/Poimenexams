@@ -1,6 +1,9 @@
+import "dotenv/config";
 import express from "express";
-import authRoutes from "./routes/auth.routes.ts";
-import userRoutes from "./routes/user.routes.ts";
+import authRoutes from "./routes/auth.routes";
+import userRoutes from "./routes/user.routes";
+import dashboardRoutes from "./routes/dashboard.routes";
+import groupRoutes from "./routes/group.routes";
 import cors from "cors";
 
 
@@ -11,6 +14,9 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/groups", groupRoutes);
+
 app.listen(5000, () => {
   console.log("Server running on port 5000");
 });

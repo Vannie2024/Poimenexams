@@ -7,19 +7,26 @@ export const login = async (
   res: Response
 ) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
+
+    console.log("USERNAME:", JSON.stringify(username));
+    console.log("PASSWORD:", JSON.stringify(password));
+
+    const allUsers = await prisma.user.findMany();
+    console.log("ALL USERS:", allUsers);
 
     const user = await prisma.user.findUnique({
       where: {
-        email,
+        username,
       },
     });
 
-    if (!user) {
-      return res.status(401).json({
-        message: "Invalid credentials",
-      });
-    }
+    console.log("USER FOUND:", user);
+        if (!user) {
+          return res.status(401).json({
+            message: "Invalid credentials",
+          });
+        }
 
     const validPassword = 
       password === user.password;
@@ -28,6 +35,13 @@ export const login = async (
       return res.status(401).json({
         message: "Invalid credentials",
       });
+    }
+
+    console.log("PASSWORD MATCH:", validPassword);
+    console.log("JWT_SECRET:", process.env.JWT_SECRET);
+
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET is missing");
     }
 
     const token = jwt.sign(

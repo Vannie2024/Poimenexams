@@ -23,7 +23,7 @@ model User {
 
   name      String
 
-  email     String   @unique
+  email     String?   @unique
 
   username  String   @unique
 
@@ -70,6 +70,10 @@ model Exam {
   duration    Int
   passMark    Int
 
+  markingSystem MarkingSystem @default(STANDARD)
+
+  correctMarks Float @default(1)
+  wrongMarks   Float @default(0)
   createdAt DateTime @default(now())
 
   creatorId String
@@ -86,6 +90,12 @@ enum QuestionType {
   SINGLE_CHOICE
   MULTIPLE_CHOICE
   TRUE_FALSE
+}
+
+enum MarkingSystem {
+  STANDARD
+  NEGATIVE
+  CUSTOM
 }
 
 enum Difficulty {
