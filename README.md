@@ -16,6 +16,20 @@ ExamForge enables teachers and administrators to:
 
 ## Features
 
+Admin Dashboard
+┌─────────────────────────────────────┐
+│ POIMEN • EXAMS │
+│ Welcome Administrator │
+└─────────────────────────────────────┘
+
+┌──────────────┐ ┌──────────────┐
+│ Create User │ │ Create Exam │
+└──────────────┘ └──────────────┘
+
+┌──────────────┐ ┌──────────────┐
+│ Groups │ │ Results │
+└──────────────┘ └──────────────┘
+
 ### MVP
 
 - User Authentication
@@ -81,7 +95,7 @@ Planning & Development
 
 ## Author
 
-Naomi
+Vanessa Amadin
 
 BSc Information Technology Management for Business
 
