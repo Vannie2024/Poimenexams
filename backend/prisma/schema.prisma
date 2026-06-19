@@ -19,17 +19,17 @@ enum UserRole {
 }
 
 model User {
-  id        String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  name      String
+  name String
 
-  email     String?   @unique
+  email String? @unique
 
-  username  String   @unique
+  username String @unique
 
-  password  String
+  password String
 
-  role      UserRole @default(STUDENT)
+  role UserRole @default(STUDENT)
 
   createdAt DateTime @default(now())
 
@@ -46,8 +46,8 @@ model Group {
   description String?
   createdAt   DateTime @default(now())
 
-  members GroupMember[]
-  exams   Exam[]
+  members    GroupMember[]
+  examGroups ExamGroup[]
 }
 
 model GroupMember {
@@ -74,16 +74,24 @@ model Exam {
 
   correctMarks Float @default(1)
   wrongMarks   Float @default(0)
+
+  shuffleQuestions Boolean @default(false)
+
+  showResultsImmediately Boolean @default(true)
+
+  allowRetakes Boolean @default(false)
+
+  maxAttempts Int @default(1)
+
   createdAt DateTime @default(now())
 
   creatorId String
   creator   User   @relation(fields: [creatorId], references: [id])
 
-  groupId String?
-  group   Group?  @relation(fields: [groupId], references: [id])
-
   questions Question[]
   attempts  ExamAttempt[]
+
+  examGroups ExamGroup[]
 }
 
 enum QuestionType {
@@ -103,6 +111,18 @@ enum Difficulty {
   MEDIUM
   HARD
   EXPERT
+}
+
+model ExamGroup {
+  id String @id @default(uuid())
+
+  examId String
+  exam   Exam   @relation(fields: [examId], references: [id])
+
+  groupId String
+  group   Group  @relation(fields: [groupId], references: [id])
+
+  @@unique([examId, groupId])
 }
 
 model Question {
@@ -139,7 +159,11 @@ model ExamAttempt {
   startedAt   DateTime  @default(now())
   submittedAt DateTime?
 
-  score Float?
+  score      Float?
+  percentage Float?
+  passed     Boolean?
+
+  attemptNumber Int @default(1)
 
   studentId String
   student   User   @relation(fields: [studentId], references: [id])
