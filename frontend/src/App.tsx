@@ -5,6 +5,8 @@ import "./index.css";
 import Members from "./pages/Members";
 import Groups from "./pages/Groups";
 import GroupDetails from "./pages/GroupDetails";
+import Exams from "./pages/Exam";
+import ExamDetails from "./pages/ExamDetails";
 
 function App() {
   return (
@@ -16,6 +18,8 @@ function App() {
         <Route path="/members" element={<Members />} />
         <Route path="/groups" element={<Groups />} />
         <Route path="/groups/:id" element={<GroupDetails />} />
+        <Route path="/exams" element={<Exams />} />
+        <Route path="/exams/:id" element={<ExamDetails />} />
       </Routes>
     </BrowserRouter>
   );

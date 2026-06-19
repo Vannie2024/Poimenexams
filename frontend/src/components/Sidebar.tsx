@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 
 export default function Sidebar() {
   const navigate = useNavigate();
+  const role = localStorage.getItem("role");
+
+  <p className="text-xs">{role}</p>;
   return (
     <aside className="sidebar">
       <div>
@@ -33,7 +36,7 @@ export default function Sidebar() {
             Members
           </button>
 
-          <button className="sidebar-link">
+          <button className="sidebar-link" onClick={() => navigate("/exams")}>
             <FileText size={18} />
             Exams
           </button>

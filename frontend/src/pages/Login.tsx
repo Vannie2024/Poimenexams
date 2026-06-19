@@ -13,9 +13,18 @@ export default function Login() {
 
       localStorage.setItem("token", data.token);
 
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          id: data.id,
+          name: data.name,
+          role: data.role,
+        }),
+      );
+
       window.location.href = "/dashboard";
     } catch {
-      alert("Invalid email or password");
+      alert("Invalid username or password");
     }
   }
 
