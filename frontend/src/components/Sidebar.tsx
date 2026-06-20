@@ -46,7 +46,10 @@ export default function Sidebar() {
             Groups
           </button>
 
-          <button className="sidebar-link">
+          <button
+            className="sidebar-link"
+            onClick={() => navigate("/admin-results/${exam.id}")}
+          >
             <BarChart3 size={18} />
             Results
           </button>

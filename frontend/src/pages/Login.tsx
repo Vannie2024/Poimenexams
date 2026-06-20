@@ -12,6 +12,8 @@ export default function Login() {
       const data = await loginUser(username, password);
 
       localStorage.setItem("token", data.token);
+      localStorage.setItem("userId", data.id);
+      localStorage.setItem("role", data.role);
 
       localStorage.setItem(
         "user",
@@ -21,8 +23,11 @@ export default function Login() {
           role: data.role,
         }),
       );
-
-      window.location.href = "/dashboard";
+      if (data.role === "ADMIN") {
+        window.location.href = "/dashboard";
+      } else {
+        window.location.href = "/student";
+      }
     } catch {
       alert("Invalid username or password");
     }

@@ -7,6 +7,11 @@ import Groups from "./pages/Groups";
 import GroupDetails from "./pages/GroupDetails";
 import Exams from "./pages/Exam";
 import ExamDetails from "./pages/ExamDetails";
+import StudentDashboard from "./pages/StudentDashboard";
+import { ExamResults } from "./pages/ExamResults";
+import { TakeExam } from "./pages/TakeExam";
+import { AdminResults } from "./pages/AdminResults";
+import { AdminExamList } from "./pages/AdminExamList";
 
 function App() {
   return (
@@ -20,6 +25,11 @@ function App() {
         <Route path="/groups/:id" element={<GroupDetails />} />
         <Route path="/exams" element={<Exams />} />
         <Route path="/exams/:id" element={<ExamDetails />} />
+        <Route path="/student-dashboard" element={<StudentDashboard />} />
+        <Route path="/exam-results/:attemptId" element={<ExamResults />} />
+        <Route path="/takeexam/:examId" element={<TakeExam />} />
+        <Route path="/admin-results/:examId" element={<AdminResults />} />
+        <Route path="/admin-results" element={<AdminExamList />} />
       </Routes>
     </BrowserRouter>
   );

@@ -41,6 +41,7 @@ export default function CreateExamModal({ onClose, onExamCreated }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    console.log("userId =", localStorage.getItem("userId"));
 
     await fetch("http://localhost:5000/api/exams", {
       method: "POST",
@@ -56,7 +57,7 @@ export default function CreateExamModal({ onClose, onExamCreated }: Props) {
         correctMarks,
         wrongMarks,
         creatorId: localStorage.getItem("userId"),
-        groupIds: selectedGroups,
+        groupIds: selectedGroups || [],
       }),
     });
 
