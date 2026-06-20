@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { UserRole } from "@prisma/client";
+import { error } from "console";
 
 export const getUsers = async (
   req: Request,
@@ -15,7 +16,8 @@ export const getUsers = async (
       });
 
     return res.json(users);
-  } catch {
+  } catch (error) {
+    console.error(error);
     return res.status(500).json({
       message: "Server Error",
     });
@@ -46,7 +48,8 @@ export const createUser = async (
       });
 
     return res.status(201).json(user);
-  } catch {
+  } catch (error) {
+    console.error(error);
     return res.status(500).json({
       message: "Server Error",
     });
@@ -78,7 +81,8 @@ export const updateUser = async (
     });
 
     return res.json(user);
-  } catch {
+  } catch (error) {
+    console.error(error);
     return res.status(500).json({
       message: "Server Error",
     });
@@ -101,7 +105,8 @@ export const deleteUser = async (
     return res.json({
       message: "User deleted",
     });
-  } catch {
+  } catch (error) {
+    console.error(error);
     return res.status(500).json({
       message: "Server Error",
     });
