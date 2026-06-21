@@ -117,10 +117,10 @@ model ExamGroup {
   id String @id @default(uuid())
 
   examId String
-  exam   Exam   @relation(fields: [examId], references: [id])
+  exam   Exam   @relation(fields: [examId], references: [id], onDelete: Cascade)
 
   groupId String
-  group   Group  @relation(fields: [groupId], references: [id])
+  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@unique([examId, groupId])
 }
@@ -134,7 +134,7 @@ model Question {
   createdAt DateTime @default(now())
 
   examId String?
-  exam   Exam?   @relation(fields: [examId], references: [id])
+  exam   Exam?   @relation(fields: [examId], references: [id], onDelete: Cascade)
 
   options QuestionOption[]
   answers Answer[]
@@ -148,7 +148,7 @@ model QuestionOption {
   isCorrect Boolean
 
   questionId String
-  question   Question @relation(fields: [questionId], references: [id])
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   selectedOptions SelectedOption[]
 }
@@ -166,10 +166,10 @@ model ExamAttempt {
   attemptNumber Int @default(1)
 
   studentId String
-  student   User   @relation(fields: [studentId], references: [id])
+  student   User   @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   examId String
-  exam   Exam   @relation(fields: [examId], references: [id])
+  exam   Exam   @relation(fields: [examId], references: [id], onDelete: Cascade)
 
   answers Answer[]
 }
@@ -178,10 +178,10 @@ model Answer {
   id String @id @default(uuid())
 
   attemptId String
-  attempt   ExamAttempt @relation(fields: [attemptId], references: [id])
+  attempt   ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
 
   questionId String
-  question   Question @relation(fields: [questionId], references: [id])
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   isCorrect Boolean
 
@@ -192,10 +192,10 @@ model SelectedOption {
   id String @id @default(uuid())
 
   answerId String
-  answer   Answer @relation(fields: [answerId], references: [id])
+  answer   Answer @relation(fields: [answerId], references: [id], onDelete: Cascade)
 
   optionId String
-  option   QuestionOption @relation(fields: [optionId], references: [id])
+  option   QuestionOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
 
   @@unique([answerId, optionId])
 }

@@ -58,18 +58,14 @@ export const createExam = async (
         },
       });
 
+      console.log("creatorId =", creatorId);
+
     if (!creator) {
       return res.status(404).json({
         message: "User not found",
       });
     }
 
-    if (creator.role !== "ADMIN") {
-      return res.status(403).json({
-        message:
-          "Only admins can create exams",
-      });
-    }
 
     const user = await prisma.user.findUnique({
         where: {
@@ -80,12 +76,6 @@ export const createExam = async (
         if (!user) {
         return res.status(404).json({
             message: "User not found",
-        });
-        }
-
-        if (user.role !== "ADMIN") {
-        return res.status(403).json({
-            message: "Only admins can create exams",
         });
         }
 
