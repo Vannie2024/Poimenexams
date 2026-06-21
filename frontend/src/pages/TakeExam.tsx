@@ -1,22 +1,28 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Clock, ChevronLeft, ChevronRight, Send } from "lucide-react";
+import {
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+  Send,
+  CheckCircle2,
+} from "lucide-react";
 
 interface Option {
   id: string;
-  optionText: string; // Updated to match Prisma schema
+  optionText: string;
 }
 
 interface Question {
   id: string;
-  question: string; // Updated to match Prisma schema
+  question: string;
   options: Option[];
 }
 
 interface ExamDetails {
   id: string;
   title: string;
-  duration: number; // in minutes
+  duration: number;
   questions: Question[];
 }
 
@@ -35,6 +41,7 @@ export const TakeExam: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const answersRef = useRef(selectedAnswers);
+
   useEffect(() => {
     answersRef.current = selectedAnswers;
   }, [selectedAnswers]);
@@ -43,14 +50,18 @@ export const TakeExam: React.FC = () => {
     const fetchExamData = async () => {
       try {
         const user = JSON.parse(localStorage.getItem("user") || "{}");
-        if (!user.id)
+
+        if (!user.id) {
           throw new Error("No authenticated student identity discovered.");
+        }
 
         const response = await fetch(
           `http://localhost:5000/api/exams/${examId}/attempt?studentId=${user.id}`,
         );
+
         if (!response.ok) {
           const errData = await response.json();
+
           throw new Error(
             errData.message || "Failed to load exam layout mapping.",
           );
@@ -67,17 +78,18 @@ export const TakeExam: React.FC = () => {
         setLoading(false);
       }
     };
+
     fetchExamData();
   }, [examId, navigate]);
 
   const handleSubmitExam = useCallback(
     async (forcedAnswers?: Record<string, string>) => {
       if (isSubmitting) return;
+
       setIsSubmitting(true);
 
       try {
         const user = JSON.parse(localStorage.getItem("user") || "{}");
-
         const answersToSubmit = forcedAnswers || answersRef.current;
 
         const response = await fetch(
@@ -93,10 +105,18 @@ export const TakeExam: React.FC = () => {
         );
 
         const result = await response.json();
+
         if (response.ok) {
           alert(
-            `Exam submitted successfully! ${result.passed !== undefined ? `Result: ${result.passed ? "PASS" : "FAIL"} (${Math.round(result.percentage)}%)` : ""}`,
+            `Exam submitted successfully! ${
+              result.passed !== undefined
+                ? `Result: ${result.passed ? "PASS" : "FAIL"} (${Math.round(
+                    result.percentage,
+                  )}%)`
+                : ""
+            }`,
           );
+
           navigate("/student-dashboard");
         } else {
           alert(result.message || "Submission failure.");
@@ -126,6 +146,7 @@ export const TakeExam: React.FC = () => {
           clearInterval(timer);
           return 0;
         }
+
         return prev - 1;
       });
     }, 1000);
@@ -136,13 +157,16 @@ export const TakeExam: React.FC = () => {
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+
+    return `${mins.toString().padStart(2, "0")}:${secs
+      .toString()
+      .padStart(2, "0")}`;
   };
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-900">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
+      <div className="flex min-h-screen items-center justify-center bg-[#f6f1e8]">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#8f895f] border-t-transparent" />
       </div>
     );
   }
@@ -151,128 +175,179 @@ export const TakeExam: React.FC = () => {
 
   const currentQuestion = exam.questions[currentQuestionIndex];
   const totalQuestions = exam.questions.length;
+  const answeredCount = Object.keys(selectedAnswers).length;
+  const progressPercentage = Math.round((answeredCount / totalQuestions) * 100);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-50">
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 px-6 py-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
+    <div className="dashboard-bg min-h-screen text-[#302f24]">
+      <header className="sticky top-0 z-40 border-b border-[#ded5c4] bg-white shadow-sm">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-8 py-5">
           <div>
-            <h1 className="text-xl font-bold tracking-tight">{exam.title}</h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Question {currentQuestionIndex + 1} of {totalQuestions}
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8f895f]">
+              POIMEN EXAMINATION
             </p>
+
+            <h1 className="mt-1 text-3xl font-semibold leading-tight">
+              {exam.title}
+            </h1>
           </div>
+
+          <div className="flex items-center gap-6">
+            <div className="text-right">
+              <p className="text-sm font-semibold text-[#605a39]">
+                Question {currentQuestionIndex + 1} of {totalQuestions}
+              </p>
+
+              <p className="text-sm text-[#8f895f]">{answeredCount} answered</p>
+            </div>
+
+            <div
+              className={`flex items-center gap-2 rounded-full px-5 py-3 text-base font-semibold shadow-sm ring-1 ${
+                timeLeft < 300
+                  ? "bg-red-100 text-red-600 ring-red-200 animate-pulse"
+                  : "bg-[#f6f1e8] text-[#302f24] ring-[#ded5c4]"
+              }`}
+            >
+              <Clock size={18} />
+              <span className="font-mono">{formatTime(timeLeft)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="h-2 bg-[#e7dfd1]">
           <div
-            className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-mono font-bold tracking-wider ${
-              timeLeft < 300
-                ? "bg-rose-50 text-rose-600 dark:bg-rose-950/30 dark:text-rose-400 animate-pulse"
-                : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
-            }`}
-          >
-            <Clock size={16} />
-            {formatTime(timeLeft)}
-          </div>
+            className="h-full bg-[#8f895f] transition-all"
+            style={{ width: `${progressPercentage}%` }}
+          />
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
-          <div className="lg:col-span-3">
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <span className="inline-flex items-center rounded-md bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400">
+      <main className="mx-auto max-w-7xl px-8 py-10">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_320px]">
+          <section
+            className="
+            rounded-3xl
+            bg-white
+            p-10
+            border
+            border-[#E5DDCC]
+            shadow-[0_25px_80px_rgba(0,0,0,0.08)]
+            "
+          >
+            <div className="mb-8 border-b border-[#eee7dc] pb-7">
+              <span className="inline-flex rounded-full bg-[#f0eadf] px-4 py-2 text-sm font-semibold text-[#8f895f]">
                 Question {currentQuestionIndex + 1}
               </span>
-              <h2 className="mt-4 text-lg font-medium leading-relaxed">
-                {currentQuestion?.question}{" "}
-              </h2>
 
-              <div className="mt-8 space-y-3">
-                {currentQuestion?.options.map((option) => {
-                  const isSelected =
-                    selectedAnswers[currentQuestion.id] === option.id;
-                  return (
-                    <button
-                      key={option.id}
-                      type="button"
-                      onClick={() =>
-                        setSelectedAnswers((prev) => ({
-                          ...prev,
-                          [currentQuestion.id]: option.id,
-                        }))
-                      }
-                      className={`flex w-full items-center justify-between rounded-xl border p-4 text-left transition-all duration-150 ${
+              <h2 className="mt-5 max-w-4xl text-3xl font-semibold leading-snug">
+                {currentQuestion?.question}
+              </h2>
+            </div>
+
+            <div className="space-y-4">
+              {currentQuestion?.options.map((option, index) => {
+                const isSelected =
+                  selectedAnswers[currentQuestion.id] === option.id;
+
+                const optionLetter = String.fromCharCode(65 + index);
+
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() =>
+                      setSelectedAnswers((prev) => ({
+                        ...prev,
+                        [currentQuestion.id]: option.id,
+                      }))
+                    }
+                    className={`flex w-full items-center gap-5 rounded-2xl border px-6 py-5 text-left transition ${
+                      isSelected
+                        ? "border-[#8f895f] bg-[#f0eadf] shadow-sm ring-2 ring-[#8f895f]/15"
+                        : "border-[#e4dccf] bg-[#fbf9f4] hover:border-[#8f895f] hover:bg-[#f6f1e8]"
+                    }`}
+                  >
+                    <div
+                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-base font-semibold ${
                         isSelected
-                          ? "border-indigo-600 bg-indigo-50/50 text-indigo-900 dark:border-indigo-500 dark:bg-indigo-950/20 dark:text-indigo-300 ring-2 ring-indigo-600/10"
-                          : "border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-slate-700 dark:hover:bg-slate-800"
+                          ? "bg-[#8f895f] text-white"
+                          : "bg-white text-[#8f895f] ring-1 ring-[#ded5c4]"
                       }`}
                     >
-                      <span className="text-sm font-medium">
-                        {option.optionText}
-                      </span>{" "}
-                      <div
-                        className={`h-4 w-4 rounded-full border flex items-center justify-center ${
-                          isSelected
-                            ? "border-indigo-600 bg-indigo-600 dark:border-indigo-500 dark:bg-indigo-500"
-                            : "border-slate-300 dark:border-slate-600"
-                        }`}
-                      >
-                        {isSelected && (
-                          <div className="h-1.5 w-1.5 rounded-full bg-white" />
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+                      {optionLetter}
+                    </div>
 
-              <div className="mt-8 flex items-center justify-between border-t border-slate-100 pt-6 dark:border-slate-800">
+                    <span className="flex-1 text-lg font-medium leading-relaxed">
+                      {option.optionText}
+                    </span>
+
+                    <div
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
+                        isSelected
+                          ? "border-[#8f895f] bg-[#8f895f]"
+                          : "border-[#cfc6b7] bg-white"
+                      }`}
+                    >
+                      {isSelected && <CheckCircle2 size={15} color="white" />}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-9 flex items-center justify-between border-t border-[#eee7dc] pt-7">
+              <button
+                type="button"
+                disabled={currentQuestionIndex === 0}
+                onClick={() => setCurrentQuestionIndex((prev) => prev - 1)}
+                className="inline-flex items-center gap-2 rounded-xl border border-[#ded5c4] bg-white px-5 py-3 text-sm font-semibold transition hover:bg-[#f6f1e8] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <ChevronLeft size={17} />
+                Previous
+              </button>
+
+              {currentQuestionIndex < totalQuestions - 1 ? (
                 <button
                   type="button"
-                  disabled={currentQuestionIndex === 0}
-                  onClick={() => setCurrentQuestionIndex((prev) => prev - 1)}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium transition hover:bg-slate-50 disabled:opacity-40 dark:border-slate-800 dark:hover:bg-slate-800"
+                  onClick={() => setCurrentQuestionIndex((prev) => prev + 1)}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#302f24] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#5f5d3d]"
                 >
-                  <ChevronLeft size={16} /> Previous
+                  Next
+                  <ChevronRight size={17} />
                 </button>
-
-                {currentQuestionIndex < totalQuestions - 1 ? (
-                  <button
-                    type="button"
-                    onClick={() => setCurrentQuestionIndex((prev) => prev + 1)}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 dark:bg-slate-50 dark:text-slate-950 dark:hover:bg-slate-100"
-                  >
-                    Next <ChevronRight size={16} />
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (
-                        window.confirm(
-                          "Are you sure you want to finish your test and lock in responses?",
-                        )
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        "Are you sure you want to finish your test and lock in responses?",
                       )
-                        handleSubmitExam();
-                    }}
-                    disabled={isSubmitting}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500 disabled:opacity-50"
-                  >
-                    <Send size={16} />{" "}
-                    {isSubmitting ? "Submitting..." : "Finish and Submit"}
-                  </button>
-                )}
-              </div>
+                    ) {
+                      handleSubmitExam();
+                    }
+                  }}
+                  disabled={isSubmitting}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#8f895f] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#5f5d3d] disabled:opacity-50"
+                >
+                  <Send size={17} />
+                  {isSubmitting ? "Submitting..." : "Finish and Submit"}
+                </button>
+              )}
             </div>
-          </div>
+          </section>
 
-          <div className="lg:col-span-1">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400">
-                Navigation Grid
-              </h3>
-              <div className="mt-4 grid grid-cols-5 gap-2">
+          <aside className="space-y-6">
+            <div className="rounded-3xl bg-white p-6 shadow-[0_18px_40px_rgba(48,47,36,0.08)]">
+              <h3 className="text-base font-semibold">Navigation</h3>
+
+              <p className="mt-1 text-sm text-[#8f895f]">
+                Jump to any question
+              </p>
+
+              <div className="mt-5 grid grid-cols-5 gap-3">
                 {exam.questions.map((q, idx) => {
-                  const isAnswered = !selectedAnswers[q.id];
+                  const isAnswered = !!selectedAnswers[q.id];
                   const isCurrent = idx === currentQuestionIndex;
 
                   return (
@@ -280,12 +355,12 @@ export const TakeExam: React.FC = () => {
                       key={q.id}
                       type="button"
                       onClick={() => setCurrentQuestionIndex(idx)}
-                      className={`flex h-10 w-10 items-center justify-center rounded-lg text-sm font-semibold transition-all ${
+                      className={`flex h-12 w-12 items-center justify-center rounded-xl text-base font-semibold transition ${
                         isCurrent
-                          ? "bg-indigo-600 text-white ring-4 ring-indigo-600/10 dark:bg-indigo-500"
+                          ? "bg-[#302f24] text-white"
                           : isAnswered
-                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/50"
-                            : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
+                            ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
+                            : "border border-[#ded5c4] bg-[#f6f3ee] text-[#8f895f] hover:bg-[#eee7dc]"
                       }`}
                     >
                       {idx + 1}
@@ -294,17 +369,38 @@ export const TakeExam: React.FC = () => {
                 })}
               </div>
 
-              <div className="mt-6 border-t border-slate-100 pt-4 space-y-2 dark:border-slate-800">
-                <div className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                  <div className="h-3 w-3 rounded bg-emerald-400" /> Answered
+              <div className="mt-6 space-y-3 border-t border-[#eee7dc] pt-5">
+                <div className="flex items-center gap-3 text-sm text-[#7c7656]">
+                  <div className="h-3.5 w-3.5 rounded bg-[#302f24]" />
+                  Current
                 </div>
-                <div className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                  <div className="h-3 w-3 rounded bg-slate-200 dark:bg-slate-700" />{" "}
+
+                <div className="flex items-center gap-3 text-sm text-[#7c7656]">
+                  <div className="h-3.5 w-3.5 rounded bg-emerald-400" />
+                  Answered
+                </div>
+
+                <div className="flex items-center gap-3 text-sm text-[#7c7656]">
+                  <div className="h-3.5 w-3.5 rounded border border-[#ded5c4] bg-[#f6f3ee]" />
                   Unanswered
                 </div>
               </div>
             </div>
-          </div>
+
+            <div className="rounded-3xl bg-[#5f5d3d] p-6 text-white shadow-[0_18px_40px_rgba(48,47,36,0.12)]">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/60">
+                Progress
+              </p>
+
+              <p className="mt-3 text-4xl font-semibold">
+                {progressPercentage}%
+              </p>
+
+              <p className="mt-2 text-sm text-white/70">
+                {answeredCount} of {totalQuestions} questions answered
+              </p>
+            </div>
+          </aside>
         </div>
       </main>
     </div>

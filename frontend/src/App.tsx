@@ -12,6 +12,7 @@ import { ExamResults } from "./pages/ExamResults";
 import { TakeExam } from "./pages/TakeExam";
 import { AdminResults } from "./pages/AdminResults";
 import { AdminExamList } from "./pages/AdminExamList";
+import AnswerSheet from "./pages/AnswerSheet";
 
 function App() {
   return (
@@ -30,6 +31,8 @@ function App() {
         <Route path="/takeexam/:examId" element={<TakeExam />} />
         <Route path="/admin-results/:examId" element={<AdminResults />} />
         <Route path="/admin-results" element={<AdminExamList />} />
+        <Route path="/answer-sheet/:attemptId" element={<AnswerSheet />} />
+        <Route path="/results" element={<AdminExamList />} />
       </Routes>
     </BrowserRouter>
   );

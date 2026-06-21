@@ -26,7 +26,7 @@ export default function Login() {
       if (data.role === "ADMIN") {
         window.location.href = "/dashboard";
       } else {
-        window.location.href = "/student";
+        window.location.href = "/student-dashboard";
       }
     } catch {
       alert("Invalid username or password");

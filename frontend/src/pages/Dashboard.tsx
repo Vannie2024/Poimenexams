@@ -48,7 +48,6 @@ export default function Dashboard() {
   return (
     <>
       <div className="dashboard-bg min-h-screen flex">
-        {/* SIDEBAR */}
         <Sidebar />
         {/* MAIN */}
         <main className="flex-1 p-8">

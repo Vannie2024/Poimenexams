@@ -9,13 +9,19 @@ import {
   ArrowRight,
   LogOut,
   Eye,
+  FileText,
+  CheckCircle2,
+  BarChart3,
+  ChevronRight,
 } from "lucide-react";
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
+
   const [activeTab, setActiveTab] = useState<
     "dashboard" | "exams" | "results" | "profile"
   >("dashboard");
+
   const [exams, setExams] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
   const [user, setUser] = useState<any>({});
@@ -24,6 +30,7 @@ export default function StudentDashboard() {
   useEffect(() => {
     const activeUser = JSON.parse(localStorage.getItem("user") || "{}");
     setUser(activeUser);
+
     if (activeUser.id) {
       Promise.all([
         loadAssignedExams(activeUser.id),
@@ -39,6 +46,7 @@ export default function StudentDashboard() {
       const response = await fetch(
         `http://localhost:5000/api/students/${userId}/exams`,
       );
+
       if (response.ok) {
         const data = await response.json();
         setExams(data);
@@ -53,9 +61,10 @@ export default function StudentDashboard() {
       const response = await fetch(
         `http://localhost:5000/api/students/${userId}/history`,
       );
+
       if (response.ok) {
         const data = await response.json();
-        setResults(data); // Expecting array of ExamAttempt records
+        setResults(data);
       }
     } catch (err) {
       console.error("Error loading results:", err);
@@ -64,171 +73,239 @@ export default function StudentDashboard() {
 
   const handleLogout = () => {
     localStorage.clear();
-    navigate("/login");
+    navigate("/");
   };
+
+  const availableExams = exams.filter(
+    (exam) => (exam.attemptsUsed || 0) < (exam.maxAttempts || 1),
+  );
+
+  const averageGrade = results.length
+    ? Math.round(
+        results.reduce((acc, curr) => acc + (curr.percentage || 0), 0) /
+          results.length,
+      )
+    : 0;
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F6F1E8]">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#8A8250] border-t-transparent"></div>
+      <div className="flex min-h-screen items-center justify-center bg-[#f6f1e8]">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#8f895f] border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-[#F6F1E8] text-[#3F3A25]">
-      {/* Symmetrical Custom Sidebar Layout */}
-      <aside className="w-72 bg-[#605A39] text-white p-8 flex flex-col justify-between shrink-0 shadow-xl">
+    <div className="dashboard-bg min-h-screen flex">
+      <aside className="sidebar">
         <div>
           <div className="mb-12">
-            <h1 className="text-5xl font-serif tracking-tight leading-none">
-              POIMEN
-            </h1>
-            <p className="text-xs tracking-[0.2em] opacity-70 mt-1 uppercase">
-              Candidate Workspace
-            </p>
+            <h1 className="sidebar-logo">POIMEN</h1>
+
+            <p className="sidebar-subtitle">Candidate Workspace</p>
           </div>
 
-          <nav className="flex flex-col gap-1.5">
-            {[
-              {
-                id: "dashboard",
-                label: "Dashboard",
-                icon: <LayoutDashboard size={18} />,
-              },
-              { id: "exams", label: "My Exams", icon: <BookOpen size={18} /> },
-              { id: "results", label: "My Results", icon: <Award size={18} /> },
-              { id: "profile", label: "Profile", icon: <User size={18} /> },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-3.5 w-full px-5 py-4 rounded-xl transition font-medium text-sm ${
-                  activeTab === tab.id
-                    ? "bg-white/20 text-white shadow-sm"
-                    : "text-white/80 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                {tab.icon}
-                {tab.label}
-              </button>
-            ))}
+          <nav className="sidebar-nav">
+            <button
+              onClick={() => setActiveTab("dashboard")}
+              className={`flex h-19.5 w-full items-center gap-6 rounded-[18px] px-7 text-[24px] font-semibold transition ${
+                activeTab === "dashboard"
+                  ? "bg-white/20 text-white"
+                  : "text-white hover:bg-white/10"
+              }`}
+            >
+              <LayoutDashboard size={24} />
+              Dashboard
+            </button>
+
+            <button
+              onClick={() => setActiveTab("exams")}
+              className={`flex h-19.5 w-full items-center gap-5 rounded-[18px] px-6 text-[24px] font-semibold transition ${
+                activeTab === "exams"
+                  ? "bg-white/20 text-white"
+                  : "text-white hover:bg-white/10"
+              }`}
+            >
+              <BookOpen size={24} />
+              My Exams
+            </button>
+
+            <button
+              onClick={() => setActiveTab("results")}
+              className={`flex h-19.5 w-full items-center gap-5 rounded-[18px] px-6 text-[24px] font-semibold transition ${
+                activeTab === "results"
+                  ? "bg-white/20 text-white"
+                  : "text-white hover:bg-white/10"
+              }`}
+            >
+              <Award size={24} />
+              My Results
+            </button>
+
+            <button
+              onClick={() => setActiveTab("profile")}
+              className={`flex h-19.5 w-full items-center gap-5 rounded-[18px] px-6 text-[24px] font-semibold transition ${
+                activeTab === "profile"
+                  ? "bg-white/20 text-white"
+                  : "text-white hover:bg-white/10"
+              }`}
+            >
+              <User size={24} />
+              Profile
+            </button>
           </nav>
         </div>
 
-        {/* User Account Info Box Footer */}
-        <div className="border-t border-white/10 pt-6 space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-bold font-serif text-lg text-white">
-              {user.name ? user.name[0].toUpperCase() : "S"}
-            </div>
-            <div className="overflow-hidden">
-              <p className="font-medium text-sm truncate leading-snug text-white">
-                {user.name || "Student"}
-              </p>
-              <span className="text-xs opacity-60 uppercase tracking-wider block mt-0.5 text-white/80">
-                STUDENT
-              </span>
-            </div>
+        <div className="sidebar-user mb-4">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/25 text-2xl font-bold">
+            {user.name ? user.name[0].toUpperCase() : "S"}
           </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 text-xs font-medium text-white/60 hover:text-red-300 w-full transition"
-          >
-            <LogOut size={14} /> Log Out
-          </button>
+
+          <div className="min-w-0">
+            <h3 className="truncate text-xl font-bold text-white">
+              {user.name || "Student"}
+            </h3>
+
+            <p className="mt-1 text-sm uppercase tracking-[1px] text-white/50">
+              Student
+            </p>
+
+            <button
+              onClick={handleLogout}
+              className="mt-3 flex items-center gap-2 text-xl text-red-500 transition hover:text-red-400"
+            >
+              <LogOut size={18} />
+              Log Out
+            </button>
+          </div>
         </div>
       </aside>
 
-      <main className="flex-1 p-12 overflow-y-auto">
+      <main className="flex-1 p-8">
         {activeTab === "dashboard" && (
-          <div className="space-y-10">
-            <div>
-              <h2 className="text-4xl font-serif text-[#605A39]">
-                Welcome Back, {user.name || "Student"}
-              </h2>
-              <p className="text-sm text-[#8A8250] mt-1">Overview</p>
+          <>
+            <section className="hero-banner">
+              <img src="/shepherd.jpg" alt="" className="hero-image" />
+
+              <div className="hero-overlay" />
+
+              <div className="hero-content">
+                <h2>Welcome Back, {user.name || "Student"}</h2>
+
+                <p className="mt-8 max-w-190 text-[28px] font-normal leading-[1.35]">
+                  View available exams, Completed exams and results from one
+                  place.
+                </p>
+              </div>
+            </section>
+
+            <div className="stats-grid">
+              <div className="dashboard-stat">
+                <FileText size={28} />
+
+                <div>
+                  <h3>Available Tests</h3>
+                  <span>{exams.length}</span>
+                </div>
+              </div>
+
+              <div className="dashboard-stat">
+                <CheckCircle2 size={28} />
+
+                <div>
+                  <h3>Completed Exams</h3>
+                  <span>{results.length}</span>
+                </div>
+              </div>
+
+              <div className="dashboard-stat">
+                <BarChart3 size={28} />
+
+                <div>
+                  <h3>Average Grade</h3>
+                  <span>{results.length ? `${averageGrade}%` : "N/A"}</span>
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white border border-[#D8CCB1] p-6 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.01)]">
-                <span className="text-xs uppercase tracking-wider text-[#8A8250] font-semibold">
-                  Available Tests
-                </span>
-                <p className="text-3xl font-serif text-[#3F3A25] font-bold mt-2">
-                  {exams.length}
-                </p>
-              </div>
-              <div className="bg-white border border-[#D8CCB1] p-6 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.01)]">
-                <span className="text-xs uppercase tracking-wider text-[#8A8250] font-semibold">
-                  Completed Runs
-                </span>
-                <p className="text-3xl font-serif text-[#3F3A25] font-bold mt-2">
-                  {results.length}
-                </p>
-              </div>
-              <div className="bg-white border border-[#D8CCB1] p-6 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.01)]">
-                <span className="text-xs uppercase tracking-wider text-[#8A8250] font-semibold">
-                  Average Grade
-                </span>
-                <p className="text-3xl font-serif text-[#3F3A25] font-bold mt-2">
-                  {results.length
-                    ? `${Math.round(results.reduce((acc, curr) => acc + (curr.percentage || 0), 0) / results.length)}%`
-                    : "N/A"}
-                </p>
-              </div>
-            </div>
+            <section className="dashboard-grid">
+              <div className="dashboard-card large-card">
+                <div className="section-header">
+                  <h2>Urgent Actions</h2>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-              <div className="bg-white border border-[#D8CCB1] rounded-2xl p-6">
-                <h3 className="text-lg font-serif text-[#605A39] mb-4">
-                  Urgent Actions
-                </h3>
-                {exams
-                  .filter((e) => (e.attemptsUsed || 0) < (e.maxAttempts || 1))
-                  .slice(0, 2)
-                  .map((exam) => (
-                    <div
-                      key={exam.id}
-                      className="flex items-center justify-between p-4 bg-[#FBF9F4] rounded-xl border border-[#EBE5D7] mb-3"
-                    >
+                  <button onClick={() => setActiveTab("exams")}>
+                    View All
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+
+                <div className="activity-feed">
+                  {availableExams.slice(0, 5).map((exam) => (
+                    <div key={exam.id} className="activity-item">
                       <div>
-                        <h4 className="font-medium text-[#3F3A25] text-sm">
-                          {exam.title}
-                        </h4>
-                        <p className="text-xs text-[#8A8250] flex items-center gap-1.5 mt-1">
-                          <Clock size={12} /> {exam.duration} mins • Cutoff:{" "}
-                          {exam.passMark}%
+                        <h3>{exam.title}</h3>
+
+                        <p>
+                          <Clock size={16} />
+                          {exam.duration} mins
+                          <span>•</span>
+                          Cutoff: {exam.passMark}%
                         </p>
                       </div>
-                      <button
-                        onClick={() => setActiveTab("exams")}
-                        className="p-2.5 bg-white text-[#8A8250] border border-[#D8CCB1] rounded-xl hover:bg-[#8A8250] hover:text-white transition"
-                      >
+
+                      <button onClick={() => navigate(`/takeexam/${exam.id}`)}>
                         <ArrowRight size={16} />
                       </button>
                     </div>
                   ))}
-                {exams.length === 0 && (
-                  <p className="text-sm text-[#8A8250] italic">
-                    No pending exam interactions required.
-                  </p>
-                )}
+
+                  {availableExams.length === 0 && (
+                    <p className="text-[18px] italic text-[#8f895f]">
+                      No pending exam interactions required.
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
+
+              <div className="side-column">
+                <div className="dashboard-column">
+                  <h2>Quick Actions</h2>
+
+                  <div className="flex flex-col gap-6">
+                    <button
+                      onClick={() => setActiveTab("exams")}
+                      className="action-btn"
+                    >
+                      <BookOpen size={22} />
+                      My Exams
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab("results")}
+                      className="action-btn"
+                    >
+                      <BarChart3 size={22} />
+                      My Results
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </>
         )}
 
         {activeTab === "exams" && (
-          <div className="space-y-6">
+          <div className="space-y-8">
             <div>
-              <h2 className="text-3xl font-serif text-[#605A39]">My Exams</h2>
-              <p className="text-sm text-[#8A8250]">Exams registered in</p>
+              <h2 className="text-4xl font-serif text-[#605a39]">My Exams</h2>
+              <p className="mt-1 text-sm text-[#8f895f]">
+                Exams registered in your workspace.
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
               {exams.length === 0 ? (
-                <p className="text-sm text-[#8A8250] italic">
+                <p className="text-sm italic text-[#8f895f]">
                   No assignments allocated to your student dashboard currently.
                 </p>
               ) : (
@@ -240,34 +317,38 @@ export default function StudentDashboard() {
                   return (
                     <div
                       key={exam.id}
-                      className="bg-white border border-[#D8CCB1] rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex flex-col justify-between min-h-55"
+                      className="flex min-h-55 flex-col justify-between rounded-[28px] bg-white p-8 shadow-[0_18px_40px_rgba(48,47,36,0.08)]"
                     >
                       <div>
                         <div className="flex items-start justify-between gap-2">
-                          <h3 className="text-xl font-serif text-[#3F3A25] font-medium leading-snug">
+                          <h3 className="text-2xl font-medium text-[#302f24]">
                             {exam.title}
                           </h3>
+
                           <span
-                            className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded border whitespace-nowrap ${
+                            className={`whitespace-nowrap rounded border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                               isLockedOut
-                                ? "bg-red-50 text-red-700 border-red-200"
-                                : "bg-[#F7F4EC] text-[#605A39] border-[#D8CCB1]"
+                                ? "border-red-200 bg-red-50 text-red-700"
+                                : "border-[#d8ccb1] bg-[#f7f4ec] text-[#605a39]"
                             }`}
                           >
                             {attemptsUsed}/{maxAttempts} Attempts
                           </span>
                         </div>
-                        <p className="text-xs text-[#8A8250] mt-2 line-clamp-2">
+
+                        <p className="mt-2 line-clamp-2 text-sm text-[#8f895f]">
                           {exam.description || "No description available."}
                         </p>
 
-                        <div className="mt-4 flex items-center gap-4 text-xs font-medium text-[#8A8250]">
+                        <div className="mt-4 flex items-center gap-4 text-sm font-medium text-[#8f895f]">
                           <span className="flex items-center gap-1">
-                            <Clock size={12} /> {exam.duration} mins
+                            <Clock size={14} />
+                            {exam.duration} mins
                           </span>
+
                           <span>
                             Pass Mark:{" "}
-                            <strong className="text-[#3F3A25]">
+                            <strong className="text-[#302f24]">
                               {exam.passMark}%
                             </strong>
                           </span>
@@ -276,12 +357,12 @@ export default function StudentDashboard() {
 
                       <button
                         disabled={isLockedOut}
-                        className={`mt-6 w-full py-3 rounded-xl text-xs font-semibold text-white transition duration-150 ${
-                          isLockedOut
-                            ? "bg-stone-200 text-stone-400 cursor-not-allowed border border-stone-300"
-                            : "bg-[#8A8250] hover:bg-[#605A39] shadow-sm"
-                        }`}
                         onClick={() => navigate(`/takeexam/${exam.id}`)}
+                        className={`mt-6 w-full rounded-xl py-3 text-sm font-semibold transition ${
+                          isLockedOut
+                            ? "cursor-not-allowed border border-stone-300 bg-stone-200 text-stone-400"
+                            : "bg-[#8f895f] text-white hover:bg-[#605a39]"
+                        }`}
                       >
                         {isLockedOut
                           ? "Attempt Limit Spent"
@@ -296,30 +377,33 @@ export default function StudentDashboard() {
         )}
 
         {activeTab === "results" && (
-          <div className="space-y-6">
+          <div className="space-y-8">
             <div>
-              <h2 className="text-3xl font-serif text-[#605A39]">My Results</h2>
-              <p className="text-sm text-[#8A8250]">your results</p>
+              <h2 className="text-4xl font-serif text-[#605a39]">My Results</h2>
+              <p className="mt-1 text-sm text-[#8f895f]">
+                Your saved exam results.
+              </p>
             </div>
 
-            <div className="bg-white border border-[#D8CCB1] rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.01)]">
+            <div className="overflow-hidden rounded-[28px] bg-white shadow-[0_18px_40px_rgba(48,47,36,0.08)]">
               <table className="w-full border-collapse text-left text-sm">
-                <thead className="bg-[#F7F4EC] text-[#605A39] text-xs font-semibold uppercase tracking-wider border-b border-[#D8CCB1]">
+                <thead className="border-b border-[#d8ccb1] bg-[#f7f4ec] text-xs font-semibold uppercase tracking-wider text-[#605a39]">
                   <tr>
                     <th className="p-4 pl-6">Exam Name</th>
                     <th className="p-4">Submission Date</th>
                     <th className="p-4 text-center">Score Profile</th>
                     <th className="p-4 text-center">Percentage</th>
-                    <th className="p-4 pr-6 text-center">Evaluation</th>
+                    <th className="p-4 text-center">Evaluation</th>
                     <th className="p-4 pr-6 text-right">Review</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#F1EFEA]">
+
+                <tbody className="divide-y divide-[#f1efea]">
                   {results.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={5}
-                        className="p-6 text-center text-[#8A8250] italic"
+                        colSpan={6}
+                        className="p-6 text-center italic text-[#8f895f]"
                       >
                         No historical evaluations saved yet.
                       </td>
@@ -328,28 +412,32 @@ export default function StudentDashboard() {
                     results.map((res) => (
                       <tr
                         key={res.id}
-                        className="hover:bg-[#FBF9F4]/50 transition"
+                        className="transition hover:bg-[#fbf9f4]/50"
                       >
-                        <td className="p-4 pl-6 font-medium text-[#3F3A25]">
+                        <td className="p-4 pl-6 font-medium text-[#302f24]">
                           {res.exam?.title || "Assessment Runtime"}
                         </td>
-                        <td className="p-4 text-[#8A8250]">
+
+                        <td className="p-4 text-[#8f895f]">
                           {res.submittedAt
                             ? new Date(res.submittedAt).toLocaleDateString()
                             : new Date(res.startedAt).toLocaleDateString()}
                         </td>
-                        <td className="p-4 text-center font-mono text-[#8A8250]">
+
+                        <td className="p-4 text-center font-mono text-[#8f895f]">
                           {res.score ?? 0} pts
                         </td>
-                        <td className="p-4 text-center font-mono font-bold text-[#605A39]">
+
+                        <td className="p-4 text-center font-mono font-bold text-[#605a39]">
                           {Math.round(res.percentage || 0)}%
                         </td>
-                        <td className="p-4 pr-6 text-right">
+
+                        <td className="p-4 text-center">
                           <span
-                            className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-wider uppercase ${
+                            className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider ${
                               res.passed
-                                ? "bg-green-50 text-green-700 border border-green-200"
-                                : "bg-red-50 text-red-700 border border-red-200"
+                                ? "border border-green-200 bg-green-50 text-green-700"
+                                : "border border-red-200 bg-red-50 text-red-700"
                             }`}
                           >
                             {res.passed ? "PASS" : "FAIL"}
@@ -362,9 +450,10 @@ export default function StudentDashboard() {
                             onClick={() =>
                               navigate(`/student/results/${res.id}`)
                             }
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#D8CCB1] text-xs font-semibold rounded-lg text-[#8A8250] bg-white hover:bg-[#8A8250] hover:text-white transition shadow-sm"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-[#d8ccb1] bg-white px-3 py-1.5 text-xs font-semibold text-[#8f895f] shadow-sm transition hover:bg-[#8f895f] hover:text-white"
                           >
-                            <Eye size={12} /> View Details
+                            <Eye size={12} />
+                            View Details
                           </button>
                         </td>
                       </tr>
@@ -377,45 +466,53 @@ export default function StudentDashboard() {
         )}
 
         {activeTab === "profile" && (
-          <div className="space-y-6 max-w-2xl">
+          <div className="max-w-2xl space-y-8">
             <div>
-              <h2 className="text-3xl font-serif text-[#605A39]">
+              <h2 className="text-4xl font-serif text-[#605a39]">
                 Identity Profile
               </h2>
-              <p className="text-sm text-[#8A8250]">Your details.</p>
+              <p className="mt-1 text-sm text-[#8f895f]">Your details.</p>
             </div>
-            <div className="bg-white border border-[#D8CCB1] rounded-2xl p-6 space-y-4 shadow-[0_4px_20px_rgba(0,0,0,0.01)]">
+
+            <div className="space-y-4 rounded-[28px] bg-white p-8 shadow-[0_18px_40px_rgba(48,47,36,0.08)]">
               <div>
-                <label className="text-[10px] text-[#8A8250] uppercase font-bold tracking-wider">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[#8f895f]">
                   Display Name
                 </label>
-                <div className="mt-1 p-3 bg-[#FBF9F4] border border-[#EBE5D7] rounded-xl font-medium text-[#3F3A25]">
+
+                <div className="mt-1 rounded-xl border border-[#ebe5d7] bg-[#fbf9f4] p-3 font-medium text-[#302f24]">
                   {user.name || "N/A"}
                 </div>
               </div>
+
               {user.email && (
                 <div>
-                  <label className="text-[10px] text-[#8A8250] uppercase font-bold tracking-wider">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-[#8f895f]">
                     Email Registry String
                   </label>
-                  <div className="mt-1 p-3 bg-[#FBF9F4] border border-[#EBE5D7] rounded-xl font-medium text-[#3F3A25]">
+
+                  <div className="mt-1 rounded-xl border border-[#ebe5d7] bg-[#fbf9f4] p-3 font-medium text-[#302f24]">
                     {user.email}
                   </div>
                 </div>
               )}
+
               <div>
-                <label className="text-[10px] text-[#8A8250] uppercase font-bold tracking-wider">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[#8f895f]">
                   Unique Reference Handle
                 </label>
-                <div className="mt-1 p-3 bg-[#FBF9F4] border border-[#EBE5D7] rounded-xl font-medium font-mono text-[#3F3A25]">
+
+                <div className="mt-1 rounded-xl border border-[#ebe5d7] bg-[#fbf9f4] p-3 font-mono font-medium text-[#302f24]">
                   {user.username || "N/A"}
                 </div>
               </div>
+
               <div>
-                <label className="text-[10px] text-[#8A8250] uppercase font-bold tracking-wider">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[#8f895f]">
                   Authorization Tier Status
                 </label>
-                <div className="mt-1 p-3 bg-[#FBF9F4] border border-[#EBE5D7] rounded-xl text-xs font-bold text-[#605A39] tracking-wide uppercase">
+
+                <div className="mt-1 rounded-xl border border-[#ebe5d7] bg-[#fbf9f4] p-3 text-xs font-bold uppercase tracking-wide text-[#605a39]">
                   {user.role || "STUDENT"}
                 </div>
               </div>
