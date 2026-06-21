@@ -3,6 +3,7 @@ import Sidebar from "../components/Sidebar";
 import CreateMemberModal from "../components/CreateMemberModal";
 import { Plus, Search } from "lucide-react";
 import EditMemberModal from "../components/EditMemberModal";
+import toast from "react-hot-toast";
 
 interface User {
   id: string;
@@ -47,7 +48,7 @@ export default function Members() {
 
       loadUsers();
     } catch {
-      alert("Failed to delete member");
+      toast("Failed to delete member");
     }
   }
 

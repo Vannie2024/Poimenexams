@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Send, CheckCircle2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface Option {
   id: string;
@@ -77,7 +78,7 @@ export const TakeExam: React.FC = () => {
         setTimeLeft(data.duration * 60);
       } catch (err: any) {
         console.error(err);
-        alert(err.message || "Error loading exam data.");
+        toast(err.message || "Error loading exam data.");
         navigate("/student-dashboard");
       } finally {
         setLoading(false);
@@ -112,7 +113,7 @@ export const TakeExam: React.FC = () => {
         const result = await response.json();
 
         if (response.ok) {
-          alert(
+          toast(
             `Exam submitted successfully! ${
               result.passed !== undefined
                 ? `Result: ${result.passed ? "PASS" : "FAIL"} (${Math.round(
@@ -124,11 +125,11 @@ export const TakeExam: React.FC = () => {
 
           navigate("/student-dashboard");
         } else {
-          alert(result.message || "Submission failure.");
+          toast(result.message || "Submission failure.");
         }
       } catch (err) {
         console.error(err);
-        alert("Network exception processing your scorecard.");
+        toast("Network exception processing your scorecard.");
       } finally {
         setIsSubmitting(false);
       }
@@ -140,7 +141,7 @@ export const TakeExam: React.FC = () => {
     if (loading || !exam) return;
 
     if (timeLeft <= 0) {
-      alert("Time has expired! Submitting your work automatically.");
+      toast("Time has expired! Submitting your work automatically.");
       handleSubmitExam(answersRef.current);
       return;
     }

@@ -13,10 +13,12 @@ import { TakeExam } from "./pages/TakeExam";
 import { AdminResults } from "./pages/AdminResults";
 import { AdminExamList } from "./pages/AdminExamList";
 import AnswerSheet from "./pages/AnswerSheet";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   return (
     <BrowserRouter>
+      <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
       <Routes>
         <Route path="/" element={<Login />} />
 
@@ -33,7 +35,7 @@ function App() {
         <Route path="/admin-results" element={<AdminExamList />} />
         <Route path="/answer-sheet/:attemptId" element={<AnswerSheet />} />
         <Route path="/results" element={<AdminExamList />} />
-        <Route path="/student/resultes/:attemptId" element={<AnswerSheet />} />
+        <Route path="/student/results/:attemptId" element={<AnswerSheet />} />
       </Routes>
     </BrowserRouter>
   );

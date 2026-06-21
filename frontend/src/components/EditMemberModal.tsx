@@ -1,6 +1,7 @@
 // EditMemberModal.tsx
 import { useState } from "react";
 import { X, Save } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface User {
   id: string;
@@ -50,7 +51,7 @@ export default function EditMemberModal({
       onMemberUpdated();
       onClose();
     } catch {
-      alert("Failed to update member");
+      toast("Failed to update member");
     }
   }
 

@@ -1,6 +1,6 @@
-// CreateMemberModal.tsx
 import { useState } from "react";
 import { X, Copy, CheckCircle2, UserPlus } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface Props {
   onClose: () => void;
@@ -49,7 +49,7 @@ export default function CreateMemberModal({ onClose, onMemberCreated }: Props) {
 
       onMemberCreated();
     } catch {
-      alert("Failed to create member");
+      toast("Failed to create member");
     }
   }
 

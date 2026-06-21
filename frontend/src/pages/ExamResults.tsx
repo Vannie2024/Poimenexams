@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { CheckCircle, XCircle, ChevronLeft, Award, EyeOff } from "lucide-react";
+import toast from "react-hot-toast";
 
 export const ExamResults: React.FC = () => {
   const { attemptId } = useParams<{ attemptId: string }>();
@@ -21,7 +22,7 @@ export const ExamResults: React.FC = () => {
         setData(json);
       } catch (err) {
         console.error(err);
-        alert("Error mapping review sheet arrays.");
+        toast("Error mapping review sheet arrays.");
         navigate("/student-dashboard");
       } finally {
         setLoading(false);
