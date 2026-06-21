@@ -1,47 +1,150 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 
-export const getExamAnalytics = async (req: Request, res: Response) => {
-  const { examId } = req.params;
-  console.log("DEBUG: Looking for Exam ID:", examId);
+export const getExamAnalytics = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    const examId = String(req.params.examId);
 
-  const id = Array.isArray(examId) ? examId[0] : examId;
+    const exam = await prisma.exam.findUnique({
+      where: {
+        id: examId,
+      },
 
-  const exam = await prisma.exam.findUnique({
-    where: { id },
-    include: {
-      attempts: {
-        include: { 
-          student: { select: { name: true } } 
-        }
-      }
+      include: {
+        questions: {
+          include: {
+            options: true,
+            answers: true,
+          },
+        },
+
+        attempts: {
+          include: {
+            student: true,
+            answers: {
+              include: {
+                question: true,
+                selectedOptions: {
+                  include: {
+                    option: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!exam) {
+      return res.status(404).json({
+        message: "Exam not found",
+      });
     }
-  });
 
-  if (!exam) {
-    console.log("DEBUG: Exam NOT FOUND in database");
-    return res.status(404).json({ message: "Exam not found" });
+    const totalAttempts =
+      exam.attempts.length;
+
+    const averageScore =
+      totalAttempts === 0
+        ? 0
+        : exam.attempts.reduce(
+            (sum, a) => sum + (a.percentage || 0),
+            0,
+          ) / totalAttempts;
+
+    const passCount =
+      exam.attempts.filter(
+        (a) => a.passed,
+      ).length;
+
+    const failCount =
+      totalAttempts - passCount;
+
+    const questionStats =
+      exam.questions.map((q) => {
+        const totalAnswers =
+          q.answers.length;
+
+        const correctAnswers =
+          q.answers.filter(
+            (a) => a.isCorrect,
+          ).length;
+
+        return {
+          id: q.id,
+          question: q.question,
+          difficulty: q.difficulty,
+
+          correctRate:
+            totalAnswers === 0
+              ? 0
+              : (
+                  (correctAnswers /
+                    totalAnswers) *
+                  100
+                ).toFixed(1),
+        };
+      });
+
+    const members =
+      exam.attempts
+        .sort(
+          (a, b) =>
+            (b.percentage || 0) -
+            (a.percentage || 0),
+        )
+        .map((a) => ({
+          attemptId: a.id,
+
+          studentId: a.student.id,
+
+          name: a.student.name,
+
+          score: a.score,
+
+          percentage: a.percentage,
+
+          passed: a.passed,
+
+          submittedAt:
+            a.submittedAt,
+        }));
+
+    return res.json({
+      examId: exam.id,
+      title: exam.title,
+
+      averageScore:
+        averageScore.toFixed(1),
+
+      totalAttempts,
+
+      passCount,
+
+      failCount,
+
+      passRate:
+        totalAttempts === 0
+          ? 0
+          : (
+              (passCount /
+                totalAttempts) *
+              100
+            ).toFixed(1),
+
+      members,
+
+      questionStats,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      message: "Server Error",
+    });
   }
-
-  const totalScore = exam.attempts.reduce(
-    (acc: number, curr: { score: number | null }) => acc + (curr.score || 0), 
-    0
-  );
-
-  const avgScore = exam.attempts.length > 0 
-    ? totalScore / exam.attempts.length 
-    : 0;
-
-  res.json({
-    title: exam.title,
-    averageScore: avgScore.toFixed(1),
-    totalAttempts: exam.attempts.length,
-    members: exam.attempts.map((a) => ({
-      id: a.id,
-      name: a.student.name,
-      score: a.score,
-      passed: a.passed,
-      submittedAt: a.submittedAt
-    }))
-  });
 };

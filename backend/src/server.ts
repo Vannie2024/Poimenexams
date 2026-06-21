@@ -8,6 +8,7 @@ import examRoutes from "./routes/exam.routes";
 import questionRoutes from "./routes/question.routes";
 import studentRoutes from "./routes/student.routes";
 import analyticsRoutes from "./routes/analytics.routes";
+import resultsRoutes from "./routes/results.routes";
 import cors from "cors";
 
 
@@ -24,6 +25,7 @@ app.use("/api/exams", examRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/results", resultsRoutes);
 
 app.listen(5000, () => {
   console.log("Server running on port 5000");
