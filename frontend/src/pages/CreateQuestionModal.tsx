@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { X } from "lucide-react";
+import { API_URL } from "@/config";
 
 interface Props {
   examId: string;
@@ -28,7 +29,7 @@ export default function CreateQuestionModal({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    await fetch("http://localhost:5000/api/questions", {
+    await fetch(`${API_URL}/api/questions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

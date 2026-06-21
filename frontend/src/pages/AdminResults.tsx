@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import MetricCard from "../components/MetricCard";
 import Sidebar from "@/components/Sidebar";
+import { API_URL } from "@/config";
 
 export const AdminResults = () => {
   const { examId } = useParams();
@@ -11,7 +12,7 @@ export const AdminResults = () => {
 
   useEffect(() => {
     if (!examId) return;
-    fetch(`http://localhost:5000/api/analytics/${examId}`)
+    fetch(`${API_URL}/api/analytics/${examId}`)
       .then((res) => res.json())
       .then((data) => {
         console.log("Fetched data:", data);

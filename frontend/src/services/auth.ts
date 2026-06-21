@@ -1,3 +1,4 @@
+import { API_URL } from "@/config";
 import axios from "axios";
 
 export const loginUser = async (
@@ -5,7 +6,7 @@ export const loginUser = async (
   password: string
 ) => {
   const response = await axios.post(
-    "http://localhost:5000/api/auth/login",
+    `${API_URL}/api/auth/login`,
     {
       username,
       password,

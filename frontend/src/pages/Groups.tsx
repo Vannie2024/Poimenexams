@@ -4,6 +4,7 @@ import CreateGroupModal from "../components/CreateGroupModal";
 import EditGroupModal from "../components/EditGroupModal";
 import { Plus, Search, Users, FolderOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "@/config";
 
 interface Group {
   id: string;
@@ -28,7 +29,7 @@ export default function Groups() {
   }, []);
 
   async function loadGroups() {
-    const response = await fetch("http://localhost:5000/api/groups");
+    const response = await fetch(`${API_URL}/api/groups`);
 
     const data = await response.json();
 
@@ -40,7 +41,7 @@ export default function Groups() {
 
     if (!confirmed) return;
 
-    await fetch(`http://localhost:5000/api/groups/${id}`, {
+    await fetch(`${API_URL}/api/groups/${id}`, {
       method: "DELETE",
     });
 

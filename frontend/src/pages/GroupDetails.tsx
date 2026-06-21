@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { UserMinus, UserPlus } from "lucide-react";
 import Sidebar from "../components/Sidebar";
+import { API_URL } from "@/config";
 
 export default function GroupDetails() {
   const { id } = useParams();
@@ -16,7 +17,7 @@ export default function GroupDetails() {
 
   async function loadGroup() {
     try {
-      const response = await fetch(`http://localhost:5000/api/groups/${id}`);
+      const response = await fetch(`${API_URL}/api/groups/${id}`);
 
       const data = await response.json();
 
@@ -28,7 +29,7 @@ export default function GroupDetails() {
 
   async function loadUsers() {
     try {
-      const response = await fetch("http://localhost:5000/api/users");
+      const response = await fetch(`${API_URL}/api/users`);
 
       const data = await response.json();
 
@@ -40,7 +41,7 @@ export default function GroupDetails() {
 
   async function addMember(userId: string) {
     try {
-      await fetch(`http://localhost:5000/api/groups/${id}/members`, {
+      await fetch(`${API_URL}/api/groups/${id}/members`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -58,7 +59,7 @@ export default function GroupDetails() {
 
   async function removeMember(userId: string) {
     try {
-      await fetch(`http://localhost:5000/api/groups/${id}/members/${userId}`, {
+      await fetch(`${API_URL}/api/groups/${id}/members/${userId}`, {
         method: "DELETE",
       });
 

@@ -4,6 +4,7 @@ import CreateExamModal from "../components/CreateExamModal";
 import { Search, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { isAdmin } from "@/utilis/auth";
+import { API_URL } from "@/config";
 
 interface Exam {
   id: string;
@@ -28,7 +29,7 @@ export default function Exams() {
   }, []);
 
   async function loadExams() {
-    const response = await fetch("http://localhost:5000/api/exams");
+    const response = await fetch(`${API_URL}/api/exams`);
 
     const data = await response.json();
 
@@ -40,7 +41,7 @@ export default function Exams() {
 
     if (!confirmed) return;
 
-    await fetch(`http://localhost:5000/api/exams/${id}`, {
+    await fetch(`${API_URL}/api/exams/${id}`, {
       method: "DELETE",
     });
 

@@ -4,6 +4,7 @@ import CreateMemberModal from "../components/CreateMemberModal";
 import { Plus, Search } from "lucide-react";
 import EditMemberModal from "../components/EditMemberModal";
 import toast from "react-hot-toast";
+import { API_URL } from "@/config";
 
 interface User {
   id: string;
@@ -26,7 +27,7 @@ export default function Members() {
 
   async function loadUsers() {
     try {
-      const response = await fetch("http://localhost:5000/api/users");
+      const response = await fetch(`${API_URL}/api/users`);
 
       const data = await response.json();
 
@@ -42,7 +43,7 @@ export default function Members() {
     if (!confirmed) return;
 
     try {
-      await fetch(`http://localhost:5000/api/users/${id}`, {
+      await fetch(`${API_URL}/api/users/${id}`, {
         method: "DELETE",
       });
 

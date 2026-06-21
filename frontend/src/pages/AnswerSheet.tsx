@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { CheckCircle2, XCircle } from "lucide-react";
+import { API_URL } from "@/config";
 
 export default function AnswerSheet() {
   const { attemptId } = useParams();
@@ -8,7 +9,7 @@ export default function AnswerSheet() {
   const [attempt, setAttempt] = useState<any>(null);
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/results/attempt/${attemptId}`)
+    fetch(`${API_URL}/api/results/attempt/${attemptId}`)
       .then((r) => r.json())
       .then(setAttempt);
   }, []);

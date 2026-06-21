@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Send, CheckCircle2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { API_URL } from "@/config";
 
 interface Option {
   id: string;
@@ -62,7 +63,7 @@ export const TakeExam: React.FC = () => {
         }
 
         const response = await fetch(
-          `http://localhost:5000/api/exams/${examId}/attempt?studentId=${user.id}`,
+          `${API_URL}/api/exams/${examId}/attempt?studentId=${user.id}`,
         );
 
         if (!response.ok) {
@@ -98,17 +99,14 @@ export const TakeExam: React.FC = () => {
         const user = JSON.parse(localStorage.getItem("user") || "{}");
         const answersToSubmit = forcedAnswers || answersRef.current;
 
-        const response = await fetch(
-          `http://localhost:5000/api/exams/${examId}/submit`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              answers: answersToSubmit,
-              studentId: user.id,
-            }),
-          },
-        );
+        const response = await fetch(`${API_URL}/api/exams/${examId}/submit`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            answers: answersToSubmit,
+            studentId: user.id,
+          }),
+        });
 
         const result = await response.json();
 

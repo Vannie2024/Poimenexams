@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { X, Save } from "lucide-react";
+import { API_URL } from "@/config";
 
 interface Props {
   group: {
@@ -23,7 +24,7 @@ export default function EditGroupModal({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    await fetch(`http://localhost:5000/api/groups/${group.id}`, {
+    await fetch(`${API_URL}/api/groups/${group.id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

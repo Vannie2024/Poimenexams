@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { X, Save } from "lucide-react";
 import toast from "react-hot-toast";
+import { API_URL } from "@/config";
 
 interface User {
   id: string;
@@ -29,20 +30,17 @@ export default function EditMemberModal({
     e.preventDefault();
 
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/users/${user.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name,
-            email,
-            role,
-          }),
+      const response = await fetch(`${API_URL}/api/users/${user.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          name,
+          email,
+          role,
+        }),
+      });
 
       if (!response.ok) {
         throw new Error();

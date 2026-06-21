@@ -12,6 +12,7 @@ import Sidebar from "../components/Sidebar";
 import CreateMemberModal from "../components/CreateMemberModal";
 import CreateExamModal from "@/components/CreateExamModal";
 import type { DashboardResponse } from "../types/dashboard";
+import { API_URL } from "@/config";
 
 export default function Dashboard() {
   const [showMemberModal, setShowMemberModal] = useState(false);
@@ -25,7 +26,7 @@ export default function Dashboard() {
   useEffect(() => {
     const loadDashboard = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/dashboard");
+        const response = await fetch(`${API_URL}/api/dashboard`);
 
         const data = await response.json();
 

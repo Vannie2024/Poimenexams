@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { X, FileSpreadsheet } from "lucide-react";
+import { API_URL } from "../config";
 
 interface Props {
   onClose: () => void;
@@ -27,7 +28,7 @@ export default function CreateExamModal({ onClose, onExamCreated }: Props) {
   }, []);
 
   async function loadGroups() {
-    const response = await fetch("http://localhost:5000/api/groups");
+    const response = await fetch(`${API_URL}/api/groups`);
 
     const data = await response.json();
 
@@ -38,7 +39,7 @@ export default function CreateExamModal({ onClose, onExamCreated }: Props) {
     e.preventDefault();
     console.log("userId =", localStorage.getItem("userId"));
 
-    await fetch("http://localhost:5000/api/exams", {
+    await fetch(`${API_URL}/api/exams`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

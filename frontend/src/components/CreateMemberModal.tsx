@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X, Copy, CheckCircle2, UserPlus } from "lucide-react";
 import toast from "react-hot-toast";
+import { API_URL } from "@/config";
 
 interface Props {
   onClose: () => void;
@@ -25,7 +26,7 @@ export default function CreateMemberModal({ onClose, onMemberCreated }: Props) {
     const generatedPassword = Math.random().toString(36).slice(-8);
 
     try {
-      const response = await fetch("http://localhost:5000/api/users", {
+      const response = await fetch(`${API_URL}/api/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

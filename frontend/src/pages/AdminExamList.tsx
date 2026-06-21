@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BarChart3 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
+import { API_URL } from "@/config";
 
 export const AdminExamList = () => {
   const [exams, setExams] = useState<any[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/exams")
+    fetch(`${API_URL}/api/exams`)
       .then((res) => res.json())
       .then((data) => {
         console.log("Fetched exams:", data);

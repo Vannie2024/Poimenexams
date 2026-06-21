@@ -14,6 +14,7 @@ import {
   BarChart3,
   ChevronRight,
 } from "lucide-react";
+import { API_URL } from "@/config";
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -43,9 +44,7 @@ export default function StudentDashboard() {
 
   async function loadAssignedExams(userId: string) {
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/students/${userId}/exams`,
-      );
+      const response = await fetch(`${API_URL}/api/students/${userId}/exams`);
 
       if (response.ok) {
         const data = await response.json();
@@ -58,9 +57,7 @@ export default function StudentDashboard() {
 
   async function loadPastResults(userId: string) {
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/students/${userId}/history`,
-      );
+      const response = await fetch(`${API_URL}/api/students/${userId}/history`);
 
       if (response.ok) {
         const data = await response.json();

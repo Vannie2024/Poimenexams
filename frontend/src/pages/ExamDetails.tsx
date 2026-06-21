@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import CreateQuestionModal from "./CreateQuestionModal";
 import { useParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
+import { API_URL } from "@/config";
 
 export default function ExamDetails() {
   const { id } = useParams();
@@ -25,7 +26,7 @@ export default function ExamDetails() {
   }, []);
 
   async function loadExam() {
-    const response = await fetch(`http://localhost:5000/api/exams/${id}`);
+    const response = await fetch(`${API_URL}/api/exams/${id}`);
 
     const data = await response.json();
 
@@ -33,22 +34,20 @@ export default function ExamDetails() {
   }
 
   async function loadExamGroups() {
-    const response = await fetch(
-      `http://localhost:5000/api/exams/${id}/groups`,
-    );
+    const response = await fetch(`${API_URL}/api/exams/${id}/groups`);
     const data = await response.json();
     setAssignedGroups(data);
   }
 
   async function loadAllGroups() {
-    const response = await fetch("http://localhost:5000/api/groups");
+    const response = await fetch(`${API_URL}/api/groups`);
     const data = await response.json();
     setAllGroups(data);
   }
 
   async function assignGroup() {
     if (!selectedGroupId) return;
-    await fetch(`http://localhost:5000/api/exams/${id}/groups`, {
+    await fetch(`${API_URL}/api/exams/${id}/groups`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ groupId: selectedGroupId }),
@@ -58,9 +57,7 @@ export default function ExamDetails() {
   }
 
   async function loadQuestions() {
-    const response = await fetch(
-      `http://localhost:5000/api/questions/exam/${id}`,
-    );
+    const response = await fetch(`${API_URL}/api/questions/exam/${id}`);
 
     const data = await response.json();
 
@@ -69,7 +66,7 @@ export default function ExamDetails() {
   }
 
   async function deleteQuestion(questionId: string) {
-    await fetch(`http://localhost:5000/api/questions/${questionId}`, {
+    await fetch(`${API_URL}/api/questions/${questionId}`, {
       method: "DELETE",
     });
 

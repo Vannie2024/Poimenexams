@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { X, FolderPlus } from "lucide-react";
+import { API_URL } from "@/config";
 
 interface Props {
   onClose: () => void;
@@ -13,7 +14,7 @@ export default function CreateGroupModal({ onClose, onGroupCreated }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    await fetch("http://localhost:5000/api/groups", {
+    await fetch(`${API_URL}/api/groups`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
