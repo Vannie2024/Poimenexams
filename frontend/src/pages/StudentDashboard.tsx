@@ -297,8 +297,8 @@ export default function StudentDashboard() {
         {activeTab === "exams" && (
           <div className="space-y-8">
             <div>
-              <h2 className="text-4xl font-serif text-[#605a39]">My Exams</h2>
-              <p className="mt-1 text-sm text-[#8f895f]">
+              <h2 className="tab-heading">My Exams</h2>
+              <p className="tab-subheading">
                 Exams registered in your workspace.
               </p>
             </div>
@@ -315,42 +315,32 @@ export default function StudentDashboard() {
                   const isLockedOut = attemptsUsed >= maxAttempts;
 
                   return (
-                    <div
-                      key={exam.id}
-                      className="flex min-h-55 flex-col justify-between rounded-[28px] bg-white p-8 shadow-[0_18px_40px_rgba(48,47,36,0.08)]"
-                    >
+                    <div key={exam.id} className="student-exam-card panel-card">
                       <div>
                         <div className="flex items-start justify-between gap-2">
-                          <h3 className="text-2xl font-medium text-[#302f24]">
-                            {exam.title}
-                          </h3>
+                          <h3 className="student-exam-title">{exam.title}</h3>
 
                           <span
-                            className={`whitespace-nowrap rounded border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                              isLockedOut
-                                ? "border-red-200 bg-red-50 text-red-700"
-                                : "border-[#d8ccb1] bg-[#f7f4ec] text-[#605a39]"
+                            className={`student-exam-badge ${
+                              isLockedOut ? "student-exam-badge--locked" : ""
                             }`}
                           >
                             {attemptsUsed}/{maxAttempts} Attempts
                           </span>
                         </div>
 
-                        <p className="mt-2 line-clamp-2 text-sm text-[#8f895f]">
+                        <p className="student-exam-desc">
                           {exam.description || "No description available."}
                         </p>
 
-                        <div className="mt-4 flex items-center gap-4 text-sm font-medium text-[#8f895f]">
+                        <div className="student-exam-meta">
                           <span className="flex items-center gap-1">
                             <Clock size={14} />
                             {exam.duration} mins
                           </span>
 
                           <span>
-                            Pass Mark:{" "}
-                            <strong className="text-[#302f24]">
-                              {exam.passMark}%
-                            </strong>
+                            Pass Mark: <strong>{exam.passMark}%</strong>
                           </span>
                         </div>
                       </div>
@@ -358,10 +348,8 @@ export default function StudentDashboard() {
                       <button
                         disabled={isLockedOut}
                         onClick={() => navigate(`/takeexam/${exam.id}`)}
-                        className={`mt-6 w-full rounded-xl py-3 text-sm font-semibold transition ${
-                          isLockedOut
-                            ? "cursor-not-allowed border border-stone-300 bg-stone-200 text-stone-400"
-                            : "bg-[#8f895f] text-white hover:bg-[#605a39]"
+                        className={`student-exam-cta ${
+                          isLockedOut ? "student-exam-cta--locked" : ""
                         }`}
                       >
                         {isLockedOut
@@ -379,78 +367,83 @@ export default function StudentDashboard() {
         {activeTab === "results" && (
           <div className="space-y-8">
             <div>
-              <h2 className="text-4xl font-serif text-[#605a39]">My Results</h2>
-              <p className="mt-1 text-sm text-[#8f895f]">
-                Your saved exam results.
-              </p>
+              <h2 className="tab-heading">My Results</h2>
+              <p className="tab-subheading">Your saved exam results.</p>
             </div>
 
-            <div className="overflow-hidden rounded-[28px] bg-white shadow-[0_18px_40px_rgba(48,47,36,0.08)]">
-              <table className="w-full border-collapse text-left text-sm">
-                <thead className="border-b border-[#d8ccb1] bg-[#f7f4ec] text-xs font-semibold uppercase tracking-wider text-[#605a39]">
+            <div className="results-history-card panel-card">
+              <table className="results-history-table">
+                <thead>
                   <tr>
-                    <th className="p-4 pl-6">Exam Name</th>
-                    <th className="p-4">Submission Date</th>
-                    <th className="p-4 text-center">Score Profile</th>
-                    <th className="p-4 text-center">Percentage</th>
-                    <th className="p-4 text-center">Evaluation</th>
-                    <th className="p-4 pr-6 text-right">Review</th>
+                    <th>Exam Name</th>
+                    <th>Submission Date</th>
+                    <th className="text-center">Score Profile</th>
+                    <th className="text-center">Percentage</th>
+                    <th className="text-center">Evaluation</th>
+                    <th className="text-right">Review</th>
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-[#f1efea]">
+                <tbody>
                   {results.length === 0 ? (
                     <tr>
                       <td
                         colSpan={6}
-                        className="p-6 text-center italic text-[#8f895f]"
+                        className="p-6 text-center italic"
+                        style={{ color: "var(--olive)" }}
                       >
                         No historical evaluations saved yet.
                       </td>
                     </tr>
                   ) : (
                     results.map((res) => (
-                      <tr
-                        key={res.id}
-                        className="transition hover:bg-[#fbf9f4]/50"
-                      >
-                        <td className="p-4 pl-6 font-medium text-[#302f24]">
+                      <tr key={res.id}>
+                        <td
+                          className="font-medium"
+                          style={{ color: "#302f24" }}
+                        >
                           {res.exam?.title || "Assessment Runtime"}
                         </td>
 
-                        <td className="p-4 text-[#8f895f]">
+                        <td style={{ color: "var(--olive)" }}>
                           {res.submittedAt
                             ? new Date(res.submittedAt).toLocaleDateString()
                             : new Date(res.startedAt).toLocaleDateString()}
                         </td>
 
-                        <td className="p-4 text-center font-mono text-[#8f895f]">
+                        <td
+                          className="text-center font-mono"
+                          style={{ color: "var(--olive)" }}
+                        >
                           {res.score ?? 0} pts
                         </td>
 
-                        <td className="p-4 text-center font-mono font-bold text-[#605a39]">
+                        <td
+                          className="text-center font-mono font-bold"
+                          style={{ color: "var(--olive-dark)" }}
+                        >
                           {Math.round(res.percentage || 0)}%
                         </td>
 
-                        <td className="p-4 text-center">
+                        <td className="text-center">
                           <span
-                            className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider ${
+                            className={`status-pill ${
                               res.passed
-                                ? "border border-green-200 bg-green-50 text-green-700"
-                                : "border border-red-200 bg-red-50 text-red-700"
+                                ? "status-pill--passed"
+                                : "status-pill--failed"
                             }`}
                           >
-                            {res.passed ? "PASS" : "FAIL"}
+                            {res.passed ? "Pass" : "Fail"}
                           </span>
                         </td>
 
-                        <td className="p-4 pr-6 text-right">
+                        <td className="text-right">
                           <button
                             type="button"
                             onClick={() =>
                               navigate(`/student/results/${res.id}`)
                             }
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-[#d8ccb1] bg-white px-3 py-1.5 text-xs font-semibold text-[#8f895f] shadow-sm transition hover:bg-[#8f895f] hover:text-white"
+                            className="results-view-btn"
                           >
                             <Eye size={12} />
                             View Details
@@ -468,51 +461,39 @@ export default function StudentDashboard() {
         {activeTab === "profile" && (
           <div className="max-w-2xl space-y-8">
             <div>
-              <h2 className="text-4xl font-serif text-[#605a39]">
-                Identity Profile
-              </h2>
-              <p className="mt-1 text-sm text-[#8f895f]">Your details.</p>
+              <h2 className="tab-heading">Identity Profile</h2>
+              <p className="tab-subheading">Your details.</p>
             </div>
 
-            <div className="space-y-4 rounded-[28px] bg-white p-8 shadow-[0_18px_40px_rgba(48,47,36,0.08)]">
+            <div className="profile-card panel-card">
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[#8f895f]">
-                  Display Name
-                </label>
-
-                <div className="mt-1 rounded-xl border border-[#ebe5d7] bg-[#fbf9f4] p-3 font-medium text-[#302f24]">
-                  {user.name || "N/A"}
-                </div>
+                <label className="profile-field-label">Display Name</label>
+                <div className="profile-field-value">{user.name || "N/A"}</div>
               </div>
 
               {user.email && (
                 <div>
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-[#8f895f]">
+                  <label className="profile-field-label">
                     Email Registry String
                   </label>
-
-                  <div className="mt-1 rounded-xl border border-[#ebe5d7] bg-[#fbf9f4] p-3 font-medium text-[#302f24]">
-                    {user.email}
-                  </div>
+                  <div className="profile-field-value">{user.email}</div>
                 </div>
               )}
 
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[#8f895f]">
+                <label className="profile-field-label">
                   Unique Reference Handle
                 </label>
-
-                <div className="mt-1 rounded-xl border border-[#ebe5d7] bg-[#fbf9f4] p-3 font-mono font-medium text-[#302f24]">
+                <div className="profile-field-value font-mono">
                   {user.username || "N/A"}
                 </div>
               </div>
 
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[#8f895f]">
+                <label className="profile-field-label">
                   Authorization Tier Status
                 </label>
-
-                <div className="mt-1 rounded-xl border border-[#ebe5d7] bg-[#fbf9f4] p-3 text-xs font-bold uppercase tracking-wide text-[#605a39]">
+                <div className="profile-field-value text-xs font-bold uppercase tracking-wide">
                   {user.role || "STUDENT"}
                 </div>
               </div>

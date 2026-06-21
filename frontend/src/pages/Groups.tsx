@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import CreateGroupModal from "../components/CreateGroupModal";
 import EditGroupModal from "../components/EditGroupModal";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Users, FolderOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Group {
@@ -84,45 +84,68 @@ export default function Groups() {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredGroups.map((group) => (
-              <div
-                key={group.id}
-                className="dashboard-card cursor-pointer"
-                onClick={() => navigate(`/groups/${group.id}`)}
-              >
-                <h2>{group.name}</h2>
+          {filteredGroups.length === 0 ? (
+            <div className="groups-empty">
+              <FolderOpen size={32} />
+              <h3>No groups found</h3>
+              <p>
+                {search
+                  ? "Try a different search term."
+                  : "Create your first group to get started."}
+              </p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {filteredGroups.map((group) => (
+                <div
+                  key={group.id}
+                  className="group-card cursor-pointer"
+                  onClick={() => navigate(`/groups/${group.id}`)}
+                >
+                  <div className="group-card-top">
+                    <div className="group-card-icon">
+                      <Users size={20} />
+                    </div>
 
-                <p>{group.description || "No description"}</p>
+                    <div>
+                      <h2 className="group-card-title">{group.name}</h2>
+                      <p className="group-card-desc">
+                        {group.description || "No description"}
+                      </p>
+                    </div>
+                  </div>
 
-                <div className="mt-4">
-                  <strong>{group.members.length}</strong> members
+                  <div className="group-card-meta">
+                    <span className="group-member-count">
+                      <strong>{group.members.length}</strong> members
+                    </span>
+
+                    <div className="group-card-actions">
+                      <button
+                        className="group-action-btn group-action-btn--edit"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingGroup(group);
+                        }}
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        className="group-action-btn group-action-btn--delete"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteGroup(group.id);
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
                 </div>
-
-                <div className="flex gap-3 mt-6">
-                  <button
-                    className="text-blue-600"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setEditingGroup(group);
-                    }}
-                  >
-                    Edit
-                  </button>
-
-                  <button
-                    className="text-red-600"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteGroup(group.id);
-                    }}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </main>
       </div>
 

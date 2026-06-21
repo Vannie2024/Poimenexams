@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, Save } from "lucide-react";
 
 interface Props {
   group: {
@@ -18,7 +18,6 @@ export default function EditGroupModal({
   onGroupUpdated,
 }: Props) {
   const [name, setName] = useState(group.name);
-
   const [description, setDescription] = useState(group.description || "");
 
   async function handleSubmit(e: React.FormEvent) {
@@ -40,39 +39,45 @@ export default function EditGroupModal({
   }
 
   return (
-    <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white p-8 rounded-2xl w-full max-w-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex justify-between mb-6">
-          <h2>Edit Group</h2>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-shell" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <p className="modal-kicker">Group Management</p>
+            <h2 className="modal-heading">Edit Group</h2>
+          </div>
 
-          <button onClick={onClose}>
-            <X />
+          <button className="modal-close-btn" onClick={onClose}>
+            <X size={20} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            className="modal-input"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
+        <div className="modal-body">
+          <form onSubmit={handleSubmit} className="modal-form">
+            <div>
+              <label className="modal-label">Group Name</label>
+              <input
+                className="modal-input"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
 
-          <textarea
-            className="modal-input"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
+            <div>
+              <label className="modal-label">Description</label>
+              <textarea
+                className="modal-input"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
 
-          <button className="action-btn w-full" type="submit">
-            Save Changes
-          </button>
-        </form>
+            <button className="modal-submit-btn" type="submit">
+              <Save size={18} />
+              Save Changes
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );

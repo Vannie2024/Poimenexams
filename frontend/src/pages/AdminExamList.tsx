@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { BarChart3 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 
 export const AdminExamList = () => {
@@ -16,64 +17,43 @@ export const AdminExamList = () => {
   }, []);
 
   return (
-    <div className="dashboard-bg min-h-screen p-10">
+    <div className="dashboard-bg results-page">
       <Sidebar />
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-10">
-          <p className="tracking-[0.3em] uppercase text-[#8A8250] text-sm">
-            Exam Analytics
-          </p>
 
-          <h1
-            className="text-5xl text-[#605A39]"
-            style={{
-              fontFamily: "Cormorant Garamond",
-            }}
-          >
-            Results & Performance
-          </h1>
-        </div>
+      <main className="results-main">
+        <div className="results-main-inner">
+          <div className="results-header">
+            <p className="exam-detail-kicker">Exam Analytics</p>
+            <h1 className="results-title">Results &amp; Performance</h1>
+          </div>
 
-        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {exams.map((exam) => (
-            <div
-              key={exam.id}
-              className="
-                bg-white
-                rounded-3xl
-                p-8
-                border
-                border-[#E5DDCC]
-                shadow-sm
-                "
-            >
-              <h2 className="text-2xl font-semibold text-[#605A39]">
-                {exam.title}
-              </h2>
+          {exams.length > 0 ? (
+            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {exams.map((exam) => (
+                <div key={exam.id} className="result-exam-card">
+                  <h2 className="result-exam-title">{exam.title}</h2>
 
-              <p className="text-gray-500 mt-2">
-                {exam.description || "No description available"}
-              </p>
+                  <p className="result-exam-desc">
+                    {exam.description || "No description available"}
+                  </p>
 
-              <button
-                onClick={() => navigate(`/admin-results/${exam.id}`)}
-                className="
-                    mt-6
-                    bg-[#8A8250]
-                    hover:bg-[#746c43]
-                    text-white
-                    px-5
-                    py-3
-                    rounded-xl
-                    transition
-                "
-              >
-                View Analytics
-              </button>
+                  <button
+                    onClick={() => navigate(`/admin-results/${exam.id}`)}
+                    className="result-exam-btn"
+                  >
+                    <BarChart3 size={15} />
+                    View Analytics
+                  </button>
+                </div>
+              ))}
             </div>
-          ))}
+          ) : (
+            <div className="results-empty">
+              <p>No exams to analyze yet.</p>
+            </div>
+          )}
         </div>
-      </div>
+      </main>
     </div>
   );
 };

@@ -10,10 +10,13 @@ import {
 import Sidebar from "../components/Sidebar";
 
 import CreateMemberModal from "../components/CreateMemberModal";
+import CreateExamModal from "@/components/CreateExamModal";
 import type { DashboardResponse } from "../types/dashboard";
 
 export default function Dashboard() {
   const [showMemberModal, setShowMemberModal] = useState(false);
+
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const [dashboard, setDashboard] = useState<DashboardResponse | null>(null);
 
@@ -126,7 +129,10 @@ export default function Dashboard() {
                     Create Member
                   </button>
 
-                  <button className="action-btn">
+                  <button
+                    className="action-btn"
+                    onClick={() => setShowCreateModal(true)}
+                  >
                     <Plus size={18} />
                     Create Exam
                   </button>
@@ -148,6 +154,13 @@ export default function Dashboard() {
         <CreateMemberModal
           onClose={() => setShowMemberModal(false)}
           onMemberCreated={() => {}}
+        />
+      )}
+
+      {showCreateModal && (
+        <CreateExamModal
+          onClose={() => setShowCreateModal(false)}
+          onExamCreated={() => {}}
         />
       )}
     </>

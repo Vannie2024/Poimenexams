@@ -57,25 +57,23 @@ export default function Exams() {
       <div className="dashboard-bg min-h-screen flex">
         <Sidebar />
 
-        <main className="flex-1 p-8">
+        <main className="flex-1 min-w-0 p-8">
           <div className="page-header">
             <div>
               <h1>Exams</h1>
               <p>Create and manage exams</p>
             </div>
 
-            {isAdmin() && (
-              <button
-                className="action-btn"
-                onClick={() => {
-                  console.log("Create Exam clicked");
-                  setShowCreateModal(true);
-                }}
-              >
-                <Plus size={18} />
-                Create Exam
-              </button>
-            )}
+            <button
+              className="action-btn"
+              onClick={() => {
+                console.log("Create Exam clicked");
+                setShowCreateModal(true);
+              }}
+            >
+              <Plus size={18} />
+              Create Exam
+            </button>
           </div>
 
           <div className="members-toolbar">
@@ -90,43 +88,84 @@ export default function Exams() {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredExams.map((exam) => (
-              <div key={exam.id} className="dashboard-card">
-                <h2>{exam.title}</h2>
+          {filteredExams.length > 0 ? (
+            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {filteredExams.map((exam) => {
+                const questionCount = exam.questions?.length || 0;
+                const groupCount = exam.examGroups?.length || 0;
 
-                <p>{exam.description || "No description"}</p>
+                return (
+                  <div key={exam.id} className="exam-card">
+                    <div className="exam-card-top">
+                      <h2 className="exam-card-title">{exam.title}</h2>
+                      <span className="exam-card-duration">
+                        {exam.duration} mins
+                      </span>
+                    </div>
 
-                <div className="mt-4 space-y-2">
-                  <div>Duration: {exam.duration} mins</div>
+                    <p className="exam-card-desc">
+                      {exam.description || "No description"}
+                    </p>
 
-                  <div>Pass Mark: {exam.passMark}%</div>
+                    <div className="exam-card-meta">
+                      <div>
+                        <p className="exam-meta-label">Pass Mark</p>
+                        <p className="exam-meta-value">{exam.passMark}%</p>
+                      </div>
 
-                  <div>Marking: {exam.markingSystem}</div>
+                      <div>
+                        <p className="exam-meta-label">Marking</p>
+                        <p className="exam-meta-value">{exam.markingSystem}</p>
+                      </div>
 
-                  <div>Questions: {exam.questions?.length || 0}</div>
+                      <div>
+                        <p className="exam-meta-label">Questions</p>
+                        <p
+                          className={`exam-meta-value ${
+                            questionCount === 0 ? "warn" : "ok"
+                          }`}
+                        >
+                          {questionCount}
+                        </p>
+                      </div>
 
-                  <div>Groups: {exam.examGroups?.length || 0}</div>
-                </div>
+                      <div>
+                        <p className="exam-meta-label">Groups</p>
+                        <p className="exam-meta-value">{groupCount}</p>
+                      </div>
+                    </div>
 
-                <div className="flex gap-3 mt-6">
-                  <button
-                    className="text-blue-600"
-                    onClick={() => navigate(`/exams/${exam.id}`)}
-                  >
-                    Open
-                  </button>
+                    <div className="exam-card-actions">
+                      <button
+                        className="exam-open-btn"
+                        onClick={() => navigate(`/exams/${exam.id}`)}
+                      >
+                        Open
+                      </button>
 
-                  <button
-                    className="text-red-600"
-                    onClick={() => deleteExam(exam.id)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+                      <button
+                        className="exam-delete-link"
+                        onClick={() => deleteExam(exam.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="exams-empty">
+              <h3 className="font-bold" style={{ color: "var(--olive-dark)" }}>
+                No exams found
+              </h3>
+              <p className="mt-1 text-sm">
+                {search
+                  ? "Try a different search term."
+                  : "Create your first exam to get started."}
+              </p>
+            </div>
+          )}
         </main>
       </div>
 

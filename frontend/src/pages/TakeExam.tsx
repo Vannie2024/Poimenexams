@@ -1,12 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  Clock,
-  ChevronLeft,
-  ChevronRight,
-  Send,
-  CheckCircle2,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Send, CheckCircle2 } from "lucide-react";
 
 interface Option {
   id: string;
@@ -45,6 +39,17 @@ export const TakeExam: React.FC = () => {
   useEffect(() => {
     answersRef.current = selectedAnswers;
   }, [selectedAnswers]);
+
+  useEffect(() => {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href =
+      "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap";
+    document.head.appendChild(link);
+    return () => {
+      document.head.removeChild(link);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchExamData = async () => {
@@ -165,8 +170,14 @@ export const TakeExam: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f6f1e8]">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#8f895f] border-t-transparent" />
+      <div
+        className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#14130E]"
+        style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
+      >
+        <div className="h-10 w-10 rounded-full border-2 border-[#3A3C2F] border-t-[#BD9650] motion-safe:animate-spin" />
+        <p className="text-xs uppercase tracking-[0.2em] text-[#8C8A6C]">
+          Preparing your examination
+        </p>
       </div>
     );
   }
@@ -176,75 +187,64 @@ export const TakeExam: React.FC = () => {
   const currentQuestion = exam.questions[currentQuestionIndex];
   const totalQuestions = exam.questions.length;
   const answeredCount = Object.keys(selectedAnswers).length;
-  const progressPercentage = Math.round((answeredCount / totalQuestions) * 100);
+  const progressPercentage = Math.round(
+    (answeredCount / Math.max(totalQuestions, 1)) * 100,
+  );
+  const isUrgent = timeLeft < 300;
+  const isLastQuestion = currentQuestionIndex === totalQuestions - 1;
 
   return (
-    <div className="dashboard-bg min-h-screen text-[#302f24]">
-      <header className="sticky top-0 z-40 border-b border-[#ded5c4] bg-white shadow-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-8 py-5">
+    <div className="exam-page">
+      <header className="exam-header">
+        <div className="exam-header-inner">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8f895f]">
-              POIMEN EXAMINATION
-            </p>
-
-            <h1 className="mt-1 text-3xl font-semibold leading-tight">
-              {exam.title}
-            </h1>
+            <p className="exam-kicker">Poimen Examination</p>
+            <h1 className="exam-title">{exam.title}</h1>
           </div>
 
-          <div className="flex items-center gap-6">
-            <div className="text-right">
-              <p className="text-sm font-semibold text-[#605a39]">
-                Question {currentQuestionIndex + 1} of {totalQuestions}
+          <div className="exam-header-meta">
+            <div className="exam-question-count">
+              <p>
+                Question {currentQuestionIndex + 1} <span>of</span>{" "}
+                {totalQuestions}
               </p>
-
-              <p className="text-sm text-[#8f895f]">{answeredCount} answered</p>
+              <p className="exam-answered-small">{answeredCount} answered</p>
             </div>
 
-            <div
-              className={`flex items-center gap-2 rounded-full px-5 py-3 text-base font-semibold shadow-sm ring-1 ${
-                timeLeft < 300
-                  ? "bg-red-100 text-red-600 ring-red-200 animate-pulse"
-                  : "bg-[#f6f1e8] text-[#302f24] ring-[#ded5c4]"
-              }`}
-            >
-              <Clock size={18} />
-              <span className="font-mono">{formatTime(timeLeft)}</span>
+            <div className={`exam-timer ${isUrgent ? "urgent" : ""}`}>
+              <strong>{formatTime(timeLeft)}</strong>
+              <span>left</span>
             </div>
           </div>
         </div>
 
-        <div className="h-2 bg-[#e7dfd1]">
+        <div className="exam-progress-bar">
           <div
-            className="h-full bg-[#8f895f] transition-all"
+            className="exam-progress-fill"
             style={{ width: `${progressPercentage}%` }}
           />
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-8 py-10">
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_320px]">
-          <section
-            className="
-            rounded-3xl
-            bg-white
-            p-10
-            border
-            border-[#E5DDCC]
-            shadow-[0_25px_80px_rgba(0,0,0,0.08)]
-            "
-          >
-            <div className="mb-8 border-b border-[#eee7dc] pb-7">
-              <span className="inline-flex rounded-full bg-[#f0eadf] px-4 py-2 text-sm font-semibold text-[#8f895f]">
-                Question {currentQuestionIndex + 1}
+      <main className="exam-main">
+        <div className="exam-frame">
+          <section className="exam-question-panel">
+            <span className="exam-big-number">
+              {String(currentQuestionIndex + 1).padStart(2, "0")}
+            </span>
+
+            <div className="exam-question-head">
+              <span className="exam-pill">
+                Question {String(currentQuestionIndex + 1).padStart(2, "0")} of{" "}
+                {String(totalQuestions).padStart(2, "0")}
               </span>
 
-              <h2 className="mt-5 max-w-4xl text-3xl font-semibold leading-snug">
+              <h2 className="exam-question-text">
                 {currentQuestion?.question}
               </h2>
             </div>
 
-            <div className="space-y-4">
+            <div className="exam-options">
               {currentQuestion?.options.map((option, index) => {
                 const isSelected =
                   selectedAnswers[currentQuestion.id] === option.id;
@@ -261,59 +261,40 @@ export const TakeExam: React.FC = () => {
                         [currentQuestion.id]: option.id,
                       }))
                     }
-                    className={`flex w-full items-center gap-5 rounded-2xl border px-6 py-5 text-left transition ${
-                      isSelected
-                        ? "border-[#8f895f] bg-[#f0eadf] shadow-sm ring-2 ring-[#8f895f]/15"
-                        : "border-[#e4dccf] bg-[#fbf9f4] hover:border-[#8f895f] hover:bg-[#f6f1e8]"
-                    }`}
+                    className={`exam-option ${isSelected ? "selected" : ""}`}
                   >
-                    <div
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-base font-semibold ${
-                        isSelected
-                          ? "bg-[#8f895f] text-white"
-                          : "bg-white text-[#8f895f] ring-1 ring-[#ded5c4]"
-                      }`}
-                    >
-                      {optionLetter}
-                    </div>
-
-                    <span className="flex-1 text-lg font-medium leading-relaxed">
+                    <span className="exam-option-letter">{optionLetter}</span>
+                    <span className="exam-option-text">
                       {option.optionText}
                     </span>
 
-                    <div
-                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
-                        isSelected
-                          ? "border-[#8f895f] bg-[#8f895f]"
-                          : "border-[#cfc6b7] bg-white"
-                      }`}
-                    >
-                      {isSelected && <CheckCircle2 size={15} color="white" />}
-                    </div>
+                    {isSelected && (
+                      <CheckCircle2 size={20} className="text-[#BD9650]" />
+                    )}
                   </button>
                 );
               })}
             </div>
 
-            <div className="mt-9 flex items-center justify-between border-t border-[#eee7dc] pt-7">
+            <div className="exam-footer">
               <button
                 type="button"
                 disabled={currentQuestionIndex === 0}
                 onClick={() => setCurrentQuestionIndex((prev) => prev - 1)}
-                className="inline-flex items-center gap-2 rounded-xl border border-[#ded5c4] bg-white px-5 py-3 text-sm font-semibold transition hover:bg-[#f6f1e8] disabled:cursor-not-allowed disabled:opacity-40"
+                className="exam-nav-btn"
               >
-                <ChevronLeft size={17} />
+                <ChevronLeft size={16} />
                 Previous
               </button>
 
-              {currentQuestionIndex < totalQuestions - 1 ? (
+              {!isLastQuestion ? (
                 <button
                   type="button"
                   onClick={() => setCurrentQuestionIndex((prev) => prev + 1)}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#302f24] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#5f5d3d]"
+                  className="exam-nav-btn exam-next-btn"
                 >
                   Next
-                  <ChevronRight size={17} />
+                  <ChevronRight size={16} />
                 </button>
               ) : (
                 <button
@@ -328,75 +309,70 @@ export const TakeExam: React.FC = () => {
                     }
                   }}
                   disabled={isSubmitting}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#8f895f] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#5f5d3d] disabled:opacity-50"
+                  className="exam-nav-btn exam-submit-btn"
                 >
-                  <Send size={17} />
-                  {isSubmitting ? "Submitting..." : "Finish and Submit"}
+                  <Send size={16} />
+                  {isSubmitting ? "Submitting..." : "Finish and submit"}
                 </button>
               )}
             </div>
           </section>
 
-          <aside className="space-y-6">
-            <div className="rounded-3xl bg-white p-6 shadow-[0_18px_40px_rgba(48,47,36,0.08)]">
-              <h3 className="text-base font-semibold">Navigation</h3>
+          <aside className="exam-ledger">
+            <p className="exam-ledger-kicker">The ledger</p>
+            <h3 className="exam-ledger-title">Jump to a question</h3>
 
-              <p className="mt-1 text-sm text-[#8f895f]">
-                Jump to any question
-              </p>
+            <div className="exam-grid">
+              {exam.questions.map((q, idx) => {
+                const isAnswered = !selectedAnswers[q.id];
+                const isCurrent = idx === currentQuestionIndex;
 
-              <div className="mt-5 grid grid-cols-5 gap-3">
-                {exam.questions.map((q, idx) => {
-                  const isAnswered = !!selectedAnswers[q.id];
-                  const isCurrent = idx === currentQuestionIndex;
+                return (
+                  <button
+                    key={q.id}
+                    type="button"
+                    onClick={() => setCurrentQuestionIndex(idx)}
+                    className={`exam-grid-btn ${
+                      isCurrent ? "current" : isAnswered ? "answered" : ""
+                    }`}
+                  >
+                    {idx + 1}
+                  </button>
+                );
+              })}
+            </div>
 
-                  return (
-                    <button
-                      key={q.id}
-                      type="button"
-                      onClick={() => setCurrentQuestionIndex(idx)}
-                      className={`flex h-12 w-12 items-center justify-center rounded-xl text-base font-semibold transition ${
-                        isCurrent
-                          ? "bg-[#302f24] text-white"
-                          : isAnswered
-                            ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
-                            : "border border-[#ded5c4] bg-[#f6f3ee] text-[#8f895f] hover:bg-[#eee7dc]"
-                      }`}
-                    >
-                      {idx + 1}
-                    </button>
-                  );
-                })}
+            <div className="exam-legend">
+              <div className="exam-legend-row">
+                <span className="exam-dot current" />
+                Current question
               </div>
-
-              <div className="mt-6 space-y-3 border-t border-[#eee7dc] pt-5">
-                <div className="flex items-center gap-3 text-sm text-[#7c7656]">
-                  <div className="h-3.5 w-3.5 rounded bg-[#302f24]" />
-                  Current
-                </div>
-
-                <div className="flex items-center gap-3 text-sm text-[#7c7656]">
-                  <div className="h-3.5 w-3.5 rounded bg-emerald-400" />
-                  Answered
-                </div>
-
-                <div className="flex items-center gap-3 text-sm text-[#7c7656]">
-                  <div className="h-3.5 w-3.5 rounded border border-[#ded5c4] bg-[#f6f3ee]" />
-                  Unanswered
-                </div>
+              <div className="exam-legend-row">
+                <span className="exam-dot answered" />
+                Answered
+              </div>
+              <div className="exam-legend-row">
+                <span className="exam-dot unanswered" />
+                Unanswered
               </div>
             </div>
 
-            <div className="rounded-3xl bg-[#5f5d3d] p-6 text-white shadow-[0_18px_40px_rgba(48,47,36,0.12)]">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/60">
-                Progress
-              </p>
+            <div className="exam-progress-card">
+              <div
+                className="exam-progress-circle"
+                style={{
+                  background: `conic-gradient(#BD9650 ${progressPercentage}%, #2B2D22 0)`,
+                }}
+              >
+                <div className="exam-progress-circle-inner">
+                  <span className="exam-progress-percent">
+                    {progressPercentage}%
+                  </span>
+                  <span className="exam-progress-label">complete</span>
+                </div>
+              </div>
 
-              <p className="mt-3 text-4xl font-semibold">
-                {progressPercentage}%
-              </p>
-
-              <p className="mt-2 text-sm text-white/70">
+              <p className="exam-progress-copy">
                 {answeredCount} of {totalQuestions} questions answered
               </p>
             </div>

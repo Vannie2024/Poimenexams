@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { ChevronLeft } from "lucide-react";
 import MetricCard from "../components/MetricCard";
 import Sidebar from "@/components/Sidebar";
 
@@ -19,7 +20,23 @@ export const AdminResults = () => {
       .catch((err) => console.error("Fetch error:", err));
   }, [examId]);
 
-  if (!data) return <div>Loading...</div>;
+  if (!data) {
+    return (
+      <div className="dashboard-bg results-page">
+        <Sidebar />
+        <main className="results-main">
+          <div className="results-main-inner">
+            <p
+              className="text-sm font-semibold"
+              style={{ color: "var(--olive-dark)" }}
+            >
+              Loading…
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   console.log(
     "MEMBER KEYS",
@@ -31,120 +48,100 @@ export const AdminResults = () => {
   );
 
   return (
-    <div className="dashboard-bg min-h-screen p-10">
+    <div className="dashboard-bg results-page">
       <Sidebar />
-      <div className="max-w-7xl mx-auto">
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <MetricCard title="Average Score" value={`${data.averageScore}%`} />
 
-          <MetricCard title="Attempts" value={data.totalAttempts} />
-
-          <MetricCard title="Passes" value={data.passCount} />
-
-          <MetricCard title="Pass Rate" value={`${data.passRate}%`} />
-        </div>
-        <div className="mb-10">
-          <p className="tracking-[0.3em] uppercase text-[#8A8250] text-sm">
-            Exam Analytics
-          </p>
-
-          <h1
-            className="text-5xl text-[#605A39]"
-            style={{
-              fontFamily: "Cormorant Garamond",
-            }}
+      <main className="results-main">
+        <div className="results-main-inner">
+          <button
+            onClick={() => navigate("/admin-results")}
+            className="results-back-link"
           >
-            {data.title}
-          </h1>
-        </div>
+            <ChevronLeft size={15} /> Back to Results
+          </button>
 
-        <div className="grid grid-cols-2 gap-6 mb-8">
-          <div className="p-6 bg-white border rounded-xl shadow-sm">
-            <p className="text-sm text-gray-500">Class Average</p>
-            <p className="text-3xl font-bold">{data.averageScore}%</p>
+          <div className="results-header">
+            <p className="exam-detail-kicker">Exam Analytics</p>
+            <h1 className="results-title">{data.title}</h1>
           </div>
-          <div className="p-6 bg-white border rounded-xl shadow-sm">
-            <p className="text-sm text-gray-500">Attempts Completed</p>
-            <p className="text-3xl font-bold">{data.totalAttempts}</p>
+
+          <div className="grid md:grid-cols-4 gap-6 mb-10">
+            <MetricCard title="Average Score" value={`${data.averageScore}%`} />
+            <MetricCard title="Attempts" value={data.totalAttempts} />
+            <MetricCard title="Passes" value={data.passCount} />
+            <MetricCard title="Pass Rate" value={`${data.passRate}%`} />
           </div>
-        </div>
 
-        <div className="bg-white border rounded-xl overflow-hidden shadow-sm">
-          <table className="w-full text-left">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="p-4">Student</th>
-                <th className="p-4">Score</th>
-                <th className="p-4">Status</th>
-                <th className="p-4">Answer Sheet</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(data?.members || []).map((m: any) => (
-                <tr key={m.attemptId} className="border-t">
-                  <td className="p-4">{m.name}</td>
-
-                  <td className="p-4 font-semibold">{m.percentage}%</td>
-
-                  <td className="p-4">
-                    <span
-                      className={`px-2 py-1 rounded text-xs ${
-                        m.passed
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {m.passed ? "PASSED" : "FAILED"}
-                    </span>
-                  </td>
-
-                  <td className="p-4">
-                    <button
-                      className="
-                        bg-blue-600
-                        text-white
-                        px-3
-                        py-2
-                        rounded-lg
-                    "
-                      onClick={() => navigate(`/answer-sheet/${m.attemptId}`)}
-                    >
-                      View Answer Sheet
-                    </button>
-                  </td>
+          <div className="results-table-card mb-10">
+            <table className="results-table">
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Score</th>
+                  <th>Status</th>
+                  <th>Answer Sheet</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {(data?.members || []).map((m: any) => (
+                  <tr key={m.attemptId}>
+                    <td>{m.name}</td>
+                    <td className="font-semibold">{m.percentage}%</td>
+                    <td>
+                      <span
+                        className={`status-pill ${
+                          m.passed
+                            ? "status-pill--passed"
+                            : "status-pill--failed"
+                        }`}
+                      >
+                        {m.passed ? "Passed" : "Failed"}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        className="answer-sheet-btn"
+                        onClick={() => navigate(`/answer-sheet/${m.attemptId}`)}
+                      >
+                        View Answer Sheet
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
 
-          <h2 className="text-xl font-bold mt-10 mb-4">Question Analysis</h2>
+            {(data?.members || []).length === 0 && (
+              <div className="results-empty" style={{ border: "none" }}>
+                <p>No attempts submitted yet.</p>
+              </div>
+            )}
+          </div>
+
+          <h2 className="qstat-section-title">Question Analysis</h2>
 
           {(data.questionStats || []).map((q: any) => (
-            <div
-              key={q.id}
-              className="
-                    bg-white
-                    border
-                    p-4
-                    rounded-xl
-                    mb-3
-                "
-            >
-              <div>{q.question}</div>
+            <div key={q.id} className="qstat-card">
+              <p className="qstat-question">{q.question}</p>
 
-              <div>
-                Correct Rate:
-                {q.correctRate}%
-              </div>
-
-              <div>
-                Difficulty:
-                {q.difficulty}
+              <div className="qstat-meta">
+                <span
+                  className={`qstat-pill ${
+                    q.correctRate >= 60
+                      ? "qstat-pill--rate-good"
+                      : "qstat-pill--rate-bad"
+                  }`}
+                >
+                  {q.correctRate}% correct
+                </span>
+                <span className="qstat-pill qstat-pill--difficulty">
+                  {q.difficulty}
+                </span>
               </div>
             </div>
           ))}
         </div>
-      </div>
+      </main>
     </div>
   );
 };

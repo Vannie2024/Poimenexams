@@ -1,3 +1,4 @@
+// CreateMemberModal.tsx
 import { useState } from "react";
 import { X, Copy, CheckCircle2, UserPlus } from "lucide-react";
 
@@ -62,77 +63,27 @@ Password: ${createdUser.password}
   }
 
   return (
-    <div
-      className="
-        fixed inset-0 z-50
-        bg-black/50
-        backdrop-blur-md
-        flex items-center justify-center
-        p-6
-      "
-      onClick={onClose}
-    >
+    <div className="modal-overlay" onClick={onClose}>
       <div
+        className="modal-shell modal-shell--lg"
         onClick={(e) => e.stopPropagation()}
-        className="
-          w-full
-          max-w-6xl
-          min-h-100
-          bg-[#FBF9F4]
-          shadow-[0_25px_80px_rgba(0,0,0,0.15)]
-          overflow-hidden
-          border border-[#E5DDCC]
-        "
       >
-        {/* HEADER */}
-        <div
-          className="
-            px-12 py-10
-            border-b border-[#E5DDCC]
-            flex items-center justify-between
-          "
-        >
+        <div className="modal-header">
           <div>
-            <p className="text-sm uppercase tracking-[0.3em] text-[#8A8250]">
-              Member Management
-            </p>
-
-            <h2
-              className="
-                text-4xl
-                text-[#605A39]
-                mt-1
-              "
-              style={{
-                fontFamily: "Cormorant Garamond",
-              }}
-            >
-              Add New Member
-            </h2>
+            <p className="modal-kicker">Member Management</p>
+            <h2 className="modal-heading">Add New Member</h2>
           </div>
 
-          <button
-            onClick={onClose}
-            className="
-              w-11 h-11
-              rounded-xl
-              bg-white
-              hover:bg-[#F2EEE3]
-              transition
-              flex items-center justify-center
-            "
-          >
-            <X size={22} />
+          <button className="modal-close-btn" onClick={onClose}>
+            <X size={20} />
           </button>
         </div>
 
-        {/* FORM */}
-        <div className="p-10">
-          <form onSubmit={handleSubmit} className="space-y-6 ">
-            <div className="grid md:grid-cols-2 gap-6">
+        <div className="modal-body">
+          <form onSubmit={handleSubmit} className="modal-form">
+            <div className="modal-form-grid">
               <div>
                 <label className="modal-label">Full Name</label>
-
                 <input
                   required
                   value={name}
@@ -144,7 +95,6 @@ Password: ${createdUser.password}
 
               <div>
                 <label className="modal-label">Email (Optional)</label>
-
                 <input
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -154,86 +104,36 @@ Password: ${createdUser.password}
               </div>
             </div>
 
-            <button
-              type="submit"
-              className="
-                w-full
-                bg-[#8A8250]
-                hover:bg-[#746C43]
-                text-white
-                py-4
-                rounded-2xl
-                font-medium
-                transition
-                flex items-center justify-center gap-3
-              "
-            >
+            <button className="modal-submit-btn" type="submit">
               <UserPlus size={18} />
               Create Member
             </button>
           </form>
 
           {createdUser && (
-            <div
-              className="
-                mt-8
-                bg-white
-                border border-[#E5DDCC]
-                rounded-3xl
-                p-6
-              "
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <CheckCircle2 className="text-green-600" size={22} />
-
-                <h3 className="font-semibold text-lg">
-                  Member Created Successfully
-                </h3>
+            <div className="modal-success-panel">
+              <div className="modal-success-header">
+                <CheckCircle2 size={22} />
+                <h3>Member Created Successfully</h3>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div
-                  className="
-                    bg-[#F6F1E8]
-                    rounded-2xl
-                    p-4
-                  "
-                >
-                  <p className="text-sm text-[#8A8250]">Username</p>
-
-                  <p className="font-semibold text-lg">
+              <div className="modal-credentials-grid">
+                <div className="modal-credential-box">
+                  <p className="modal-credential-label">Username</p>
+                  <p className="modal-credential-value">
                     {createdUser.username}
                   </p>
                 </div>
 
-                <div
-                  className="
-                    bg-[#F6F1E8]
-                    rounded-2xl
-                    p-4
-                  "
-                >
-                  <p className="text-sm text-[#8A8250]">Password</p>
-
-                  <p className="font-semibold text-lg">
+                <div className="modal-credential-box">
+                  <p className="modal-credential-label">Password</p>
+                  <p className="modal-credential-value">
                     {createdUser.password}
                   </p>
                 </div>
               </div>
 
-              <button
-                onClick={copyCredentials}
-                className="
-                  mt-5
-                  bg-[#605A39]
-                  hover:bg-[#4E482C]
-                  text-white
-                  px-5
-                  py-3
-                  rounded-xl
-                  flex items-center gap-2
-                "
-              >
+              <button className="modal-copy-btn" onClick={copyCredentials}>
                 <Copy size={16} />
                 Copy Credentials
               </button>

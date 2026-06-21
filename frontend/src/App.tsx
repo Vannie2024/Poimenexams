@@ -33,6 +33,7 @@ function App() {
         <Route path="/admin-results" element={<AdminExamList />} />
         <Route path="/answer-sheet/:attemptId" element={<AnswerSheet />} />
         <Route path="/results" element={<AdminExamList />} />
+        <Route path="/student/resultes/:attemptId" element={<AnswerSheet />} />
       </Routes>
     </BrowserRouter>
   );

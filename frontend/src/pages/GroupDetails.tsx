@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { UserMinus, UserPlus } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 
 export default function GroupDetails() {
@@ -67,6 +68,15 @@ export default function GroupDetails() {
     }
   }
 
+  function initials(name: string) {
+    return name
+      .split(" ")
+      .map((part) => part[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
+  }
+
   if (!group) {
     return (
       <div className="dashboard-bg min-h-screen flex">
@@ -81,68 +91,84 @@ export default function GroupDetails() {
     <div className="dashboard-bg min-h-screen flex">
       <Sidebar />
 
-      <main className="flex-1 p-8">
-        <div className="page-header">
-          <div>
-            <h1>{group.name}</h1>
+      <main className="group-detail-main">
+        <p className="group-detail-kicker">Group Profile</p>
+        <h1 className="group-detail-title">{group.name}</h1>
+        <p className="group-detail-desc">
+          {group.description || "No description provided for this group."}
+        </p>
 
-            <p>{group.description || "No description"}</p>
-          </div>
-        </div>
+        <div className="group-detail-body">
+          {/* MEMBERS */}
+          <div className="member-list-card">
+            <div className="member-list-header">
+              <span className="member-list-title">Group Members</span>
+              <span className="member-list-count">
+                {group.members?.length || 0} total
+              </span>
+            </div>
 
-        {/* MEMBERS */}
-        <div className="table-card mb-8">
-          <h2 className="mb-6 text-xl font-semibold">Group Members</h2>
-
-          <div className="space-y-3">
-            {group.members?.map((member: any) => (
-              <div
-                key={member.id}
-                className="flex justify-between items-center border-b pb-3"
-              >
-                <div>
-                  <p className="font-medium">{member.user.name}</p>
-
-                  <p className="text-sm text-gray-500">
-                    {member.user.username}
-                  </p>
-                </div>
-
-                <button
-                  className="text-red-600"
-                  onClick={() => removeMember(member.user.id)}
-                >
-                  Remove
-                </button>
+            {!group.members || group.members.length === 0 ? (
+              <div className="member-list-empty">
+                No members in this group yet.
               </div>
-            ))}
-          </div>
-        </div>
+            ) : (
+              group.members.map((member: any) => (
+                <div key={member.id} className="member-row">
+                  <div className="member-row-left">
+                    <div className="member-avatar">
+                      {initials(member.user.name)}
+                    </div>
 
-        {/* ADD MEMBERS */}
-        <div className="table-card">
-          <h2 className="mb-6 text-xl font-semibold">Add Members</h2>
+                    <div>
+                      <p className="member-name">{member.user.name}</p>
+                      <p className="member-username">{member.user.username}</p>
+                    </div>
+                  </div>
 
-          <div className="space-y-3">
-            {users.map((user) => (
-              <div
-                key={user.id}
-                className="flex justify-between items-center border-b pb-3"
-              >
-                <div>
-                  <p className="font-medium">{user.name}</p>
-
-                  <p className="text-sm text-gray-500">{user.username}</p>
+                  <button
+                    className="member-row-action member-row-action--remove"
+                    onClick={() => removeMember(member.user.id)}
+                  >
+                    <UserMinus size={14} />
+                    Remove
+                  </button>
                 </div>
+              ))
+            )}
+          </div>
 
-                <button
-                  className="text-green-600"
-                  onClick={() => addMember(user.id)}
-                >
-                  Add
-                </button>
-              </div>
-            ))}
+          {/* ADD MEMBERS */}
+          <div className="member-list-card">
+            <div className="member-list-header">
+              <span className="member-list-title">Add Members</span>
+              <span className="member-list-count">{users.length} total</span>
+            </div>
+
+            {users.length === 0 ? (
+              <div className="member-list-empty">No members available.</div>
+            ) : (
+              users.map((user) => (
+                <div key={user.id} className="member-row">
+                  <div className="member-row-left">
+                    <div className="member-avatar">{initials(user.name)}</div>
+
+                    <div>
+                      <p className="member-name">{user.name}</p>
+                      <p className="member-username">{user.username}</p>
+                    </div>
+                  </div>
+
+                  <button
+                    className="member-row-action member-row-action--add"
+                    onClick={() => addMember(user.id)}
+                  >
+                    <UserPlus size={14} />
+                    Add
+                  </button>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </main>
