@@ -13,7 +13,11 @@ import cors from "cors";
 
 
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "https://poimenexams.onrender.com"],
+    credentials: true,
+}));
 app.use(express.json());
 
 
