@@ -247,7 +247,6 @@ export const TakeExam: React.FC = () => {
               {currentQuestion?.options.map((option, index) => {
                 const isSelected =
                   selectedAnswers[currentQuestion.id] === option.id;
-
                 const optionLetter = String.fromCharCode(65 + index);
 
                 return (
@@ -255,10 +254,18 @@ export const TakeExam: React.FC = () => {
                     key={option.id}
                     type="button"
                     onClick={() =>
-                      setSelectedAnswers((prev) => ({
-                        ...prev,
-                        [currentQuestion.id]: option.id,
-                      }))
+                      setSelectedAnswers((prev) => {
+                        // If option is clicked again, drop key reference to deselect answer fully
+                        if (prev[currentQuestion.id] === option.id) {
+                          const cleanedState = { ...prev };
+                          delete cleanedState[currentQuestion.id];
+                          return cleanedState;
+                        }
+                        return {
+                          ...prev,
+                          [currentQuestion.id]: option.id,
+                        };
+                      })
                     }
                     className={`exam-option ${isSelected ? "selected" : ""}`}
                   >
@@ -266,7 +273,6 @@ export const TakeExam: React.FC = () => {
                     <span className="exam-option-text">
                       {option.optionText}
                     </span>
-
                     {isSelected && (
                       <CheckCircle2 size={20} className="text-[#BD9650]" />
                     )}
@@ -323,7 +329,7 @@ export const TakeExam: React.FC = () => {
 
             <div className="exam-grid">
               {exam.questions.map((q, idx) => {
-                const isAnswered = !selectedAnswers[q.id];
+                const isAnswered = !!selectedAnswers[q.id];
                 const isCurrent = idx === currentQuestionIndex;
 
                 return (

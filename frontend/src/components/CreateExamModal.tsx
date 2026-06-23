@@ -14,14 +14,14 @@ export default function CreateExamModal({ onClose, onExamCreated }: Props) {
   const [description, setDescription] = useState("");
   const [duration, setDuration] = useState(60);
   const [passMark, setPassMark] = useState(50);
-
   const [markingSystem, setMarkingSystem] = useState("STANDARD");
-
   const [correctMarks, setCorrectMarks] = useState(1);
-
   const [wrongMarks, setWrongMarks] = useState(0);
-
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
+
+  // Time Window States
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
 
   useEffect(() => {
     loadGroups();
@@ -29,15 +29,12 @@ export default function CreateExamModal({ onClose, onExamCreated }: Props) {
 
   async function loadGroups() {
     const response = await fetch(`${API_URL}/api/groups`);
-
     const data = await response.json();
-
     setGroups(data);
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    console.log("userId =", localStorage.getItem("userId"));
 
     await fetch(`${API_URL}/api/exams`, {
       method: "POST",
@@ -52,6 +49,8 @@ export default function CreateExamModal({ onClose, onExamCreated }: Props) {
         markingSystem,
         correctMarks,
         wrongMarks,
+        startTime: startTime || null,
+        endTime: endTime || null,
         creatorId: localStorage.getItem("userId"),
         groupIds: selectedGroups || [],
       }),
@@ -118,6 +117,31 @@ export default function CreateExamModal({ onClose, onExamCreated }: Props) {
                   type="number"
                   value={passMark}
                   onChange={(e) => setPassMark(Number(e.target.value))}
+                />
+              </div>
+            </div>
+
+            {/* Time Restrictions Grid */}
+            <div className="modal-form-grid">
+              <div>
+                <label className="modal-label">
+                  Start Time / Unlock Window
+                </label>
+                <input
+                  className="modal-input"
+                  type="datetime-local"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="modal-label">End Time / Close Window</label>
+                <input
+                  className="modal-input"
+                  type="datetime-local"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
                 />
               </div>
             </div>

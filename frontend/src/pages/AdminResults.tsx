@@ -1,14 +1,28 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, RefreshCw } from "lucide-react";
 import MetricCard from "../components/MetricCard";
 import Sidebar from "@/components/Sidebar";
 import { API_URL } from "@/config";
+import toast from "react-hot-toast";
 
 export const AdminResults = () => {
   const { examId } = useParams();
   const [data, setData] = useState<any>(null);
+  const [isReassessing, setIsReassessing] = useState(false);
   const navigate = useNavigate();
+
+  const fetchAnalyticsData = () => {
+    if (!examId) return;
+    fetch(`${API_URL}/api/analytics/${examId}`)
+      .then((res) => res.json())
+      .then((data) => setData(data))
+      .catch((err) => console.error("Fetch error:", err));
+  };
+
+  useEffect(() => {
+    fetchAnalyticsData();
+  }, [examId]);
 
   useEffect(() => {
     if (!examId) return;
@@ -20,6 +34,33 @@ export const AdminResults = () => {
       })
       .catch((err) => console.error("Fetch error:", err));
   }, [examId]);
+
+  const handleReassessExam = async () => {
+    if (
+      !window.confirm(
+        "Are you sure you want to recalculate and remark all past student attempts for this exam using current system scoring attributes?",
+      )
+    )
+      return;
+
+    setIsReassessing(true);
+    try {
+      const res = await fetch(`${API_URL}/api/exams/${examId}/reassess`, {
+        method: "POST",
+      });
+      if (res.ok) {
+        toast.success("Exam results re-graded successfully!");
+        fetchAnalyticsData();
+      } else {
+        toast.error("Failed to re-grade elements.");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Network problem processing batch updates.");
+    } finally {
+      setIsReassessing(false);
+    }
+  };
 
   if (!data) {
     return (
@@ -64,6 +105,29 @@ export const AdminResults = () => {
           <div className="results-header">
             <p className="exam-detail-kicker">Exam Analytics</p>
             <h1 className="results-title">{data.title}</h1>
+
+            <button
+              onClick={handleReassessExam}
+              disabled={isReassessing}
+              className="answer-sheet-btn"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                background: "var(--olive-dark)",
+                color: "white",
+                padding: "8px 16px",
+                borderRadius: "6px",
+              }}
+            >
+              <RefreshCw
+                size={15}
+                className={isReassessing ? "animate-spin" : ""}
+              />
+              {isReassessing
+                ? "Remarking Submissions..."
+                : "Reassess & Remark Exam"}
+            </button>
           </div>
 
           <div className="grid md:grid-cols-4 gap-6 mb-10">
