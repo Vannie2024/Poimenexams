@@ -75,6 +75,9 @@ model Exam {
   correctMarks Float @default(1)
   wrongMarks   Float @default(0)
 
+  startTime              DateTime?
+  endTime                DateTime?
+
   shuffleQuestions Boolean @default(false)
 
   showResultsImmediately Boolean @default(true)

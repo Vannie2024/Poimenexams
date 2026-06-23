@@ -49,6 +49,8 @@ export const createExam = async (
       maxAttempts,
       creatorId,
       groupIds,
+      startTime,
+      endTime,
     } = req.body;
 
     const creator =
@@ -91,6 +93,8 @@ export const createExam = async (
           correctMarks,
           wrongMarks,
 
+          startTime: startTime ? new Date(startTime) : null,
+          endTime: endTime ? new Date(endTime) : null,
           shuffleQuestions,
           showResultsImmediately,
           allowRetakes,
@@ -169,6 +173,8 @@ export const updateExam = async (
       showResultsImmediately,
       allowRetakes,
       maxAttempts,
+      startTime,
+      endTime,
     } = req.body;
 
     const exam = await prisma.exam.update({
@@ -181,6 +187,8 @@ export const updateExam = async (
         markingSystem,
         correctMarks,
         wrongMarks,
+        startTime: startTime ? new Date(startTime) : null,
+        endTime: endTime ? new Date(endTime) : null,
         shuffleQuestions,
         showResultsImmediately,
         allowRetakes,
@@ -247,6 +255,18 @@ export const getExamForAttempt = async (req: Request, res: Response) => {
 
     if (!exam) {
       return res.status(404).json({ message: "Exam configuration records not found." });
+    }
+
+    const currentTime = new Date();
+    if (exam.startTime && currentTime < new Date(exam.startTime)) {
+      return res.status(403).json({ 
+        message: `This exam is locked. It will open for testing on ${new Date(exam.startTime).toLocaleString()}.` 
+      });
+    }
+    if (exam.endTime && currentTime > new Date(exam.endTime)) {
+      return res.status(403).json({ 
+        message: "This exam has officially closed and can no longer be initialized." 
+      });
     }
 
     const pastAttemptsCount = await prisma.examAttempt.count({
@@ -332,7 +352,7 @@ export const submitExamAttempt = async (req: Request, res: Response) => {
             if (isCorrect) {
             pointsEarned += exam.correctMarks;
             } else if (chosenOptionId) {
-            pointsEarned -= exam.wrongMarks;
+            pointsEarned -= Math.abs(exam.wrongMarks);
             }
         } else if (exam.markingSystem === "CUSTOM") {
             if (isCorrect) pointsEarned += exam.correctMarks;
@@ -516,6 +536,82 @@ export const assignGroupToExam = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server Error" });
+  }
+};
+
+export const reassessExamAttempts = async (req: Request, res: Response) => {
+  try {
+    const examId = String(req.params.examId);
+
+    const exam = await prisma.exam.findUnique({
+      where: { id: examId },
+      include: {
+        questions: {
+          include: { options: true },
+        },
+      },
+    });
+
+    if (!exam) return res.status(404).json({ message: "Target exam configuration not found." });
+
+    const attempts = await prisma.examAttempt.findMany({
+      where: { examId },
+      include: {
+        answers: {
+          include: { selectedOptions: true }
+        }
+      }
+    });
+
+    const totalQuestions = exam.questions.length;
+    const maxPossiblePoints = exam.markingSystem === "STANDARD" ? totalQuestions : (totalQuestions * exam.correctMarks);
+
+    await prisma.$transaction(async (tx) => {
+      for (const attempt of attempts) {
+        let pointsEarned = 0;
+
+        for (const q of exam.questions) {
+          const matchingAnswerRecord = attempt.answers.find((a) => a.questionId === q.id);
+          const chosenOptionId = matchingAnswerRecord?.selectedOptions[0]?.optionId;
+          
+          const correctOption = q.options.find((o) => o.isCorrect);
+          const isCorrect = correctOption ? chosenOptionId === correctOption.id : false;
+
+          if (matchingAnswerRecord) {
+            await tx.answer.update({
+              where: { id: matchingAnswerRecord.id },
+              data: { isCorrect }
+            });
+          }
+
+          if (exam.markingSystem === "NEGATIVE") {
+            if (isCorrect) pointsEarned += exam.correctMarks;
+            else if (chosenOptionId) pointsEarned -= Math.abs(exam.wrongMarks);
+          } else if (exam.markingSystem === "CUSTOM") {
+            if (isCorrect) pointsEarned += exam.correctMarks;
+          } else {
+            if (isCorrect) pointsEarned += 1;
+          }
+        }
+
+        const finalPercentage = maxPossiblePoints > 0 ? Math.max(0, (pointsEarned / maxPossiblePoints) * 100) : 0;
+        const passed = finalPercentage >= exam.passMark;
+
+        await tx.examAttempt.update({
+          where: { id: attempt.id },
+          data: {
+            score: pointsEarned,
+            percentage: finalPercentage,
+            passed: passed
+          }
+        });
+      }
+    });
+
+    return res.json({ message: "Exam attempts successfully remarked and recalculated." });
+  } catch (error) {
+    console.error("Retrospective Grading Engine Exception:", error);
+    return res.status(500).json({ message: "Failed to cleanly reassess exam data pools." });
   }
 };
 
