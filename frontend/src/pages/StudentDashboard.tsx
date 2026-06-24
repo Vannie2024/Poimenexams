@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   BarChart3,
   ChevronRight,
+  GraduationCap,
 } from "lucide-react";
 import { API_URL } from "@/config";
 
@@ -20,13 +21,19 @@ export default function StudentDashboard() {
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<
-    "dashboard" | "exams" | "results" | "profile"
+    "dashboard" | "exams" | "practice" | "results" | "profile"
   >("dashboard");
 
   const [exams, setExams] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
   const [user, setUser] = useState<any>({});
   const [loading, setLoading] = useState<boolean>(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const activeUser = JSON.parse(localStorage.getItem("user") || "{}");
@@ -73,7 +80,37 @@ export default function StudentDashboard() {
     navigate("/");
   };
 
-  const availableExams = exams.filter(
+  const getExamLockStatus = (exam: any) => {
+    const attemptsUsed = exam.attemptsUsed || 0;
+    const maxAttempts = exam.maxAttempts || 1;
+
+    const start = exam.startTime ? new Date(exam.startTime) : null;
+    const end = exam.endTime ? new Date(exam.endTime) : null;
+
+    const isNotStartedYet = start ? currentTime < start : false;
+    const isEnded = end ? currentTime > end : false;
+    const isAttemptsSpent = attemptsUsed >= maxAttempts;
+
+    const isLocked = isNotStartedYet || isEnded || isAttemptsSpent;
+
+    let statusLabel = "Start Exam Session";
+    if (isNotStartedYet)
+      statusLabel = `Unlocks: ${start?.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+    else if (isEnded) statusLabel = "Exam Window Closed";
+    else if (isAttemptsSpent) statusLabel = "Attempts Expired";
+
+    return { isLocked, statusLabel };
+  };
+
+  const standardExams = exams.filter((exam) => !exam.isPractice);
+  const practiceExams = exams.filter((exam) => exam.isPractice);
+
+  const availableExamsCount = standardExams.filter((exam) => {
+    const { isLocked } = getExamLockStatus(exam);
+    return !isLocked;
+  }).length;
+
+  const availableExams = standardExams.filter(
     (exam) => (exam.attemptsUsed || 0) < (exam.maxAttempts || 1),
   );
 
@@ -98,7 +135,6 @@ export default function StudentDashboard() {
         <div>
           <div className="mb-12">
             <h1 className="sidebar-logo">POIMEN</h1>
-
             <p className="sidebar-subtitle">Candidate Workspace</p>
           </div>
 
@@ -125,6 +161,18 @@ export default function StudentDashboard() {
             >
               <BookOpen size={24} />
               My Exams
+            </button>
+
+            <button
+              onClick={() => setActiveTab("practice")}
+              className={`flex h-19.5 w-full items-center gap-5 rounded-[18px] px-6 text-[24px] font-semibold transition ${
+                activeTab === "practice"
+                  ? "bg-white/20 text-white"
+                  : "text-white hover:bg-white/10"
+              }`}
+            >
+              <GraduationCap size={24} />
+              Practice Tests
             </button>
 
             <button
@@ -183,12 +231,9 @@ export default function StudentDashboard() {
           <>
             <section className="hero-banner">
               <img src="/shepherd.jpg" alt="" className="hero-image" />
-
               <div className="hero-overlay" />
-
               <div className="hero-content">
                 <h2>Welcome Back, {user.name || "Student"}</h2>
-
                 <p className="mt-8 max-w-190 text-[28px] font-normal leading-[1.35]">
                   View available exams, Completed exams and results from one
                   place.
@@ -199,16 +244,14 @@ export default function StudentDashboard() {
             <div className="stats-grid">
               <div className="dashboard-stat">
                 <FileText size={28} />
-
                 <div>
                   <h3>Available Tests</h3>
-                  <span>{exams.length}</span>
+                  <span>{availableExamsCount}</span>
                 </div>
               </div>
 
               <div className="dashboard-stat">
                 <CheckCircle2 size={28} />
-
                 <div>
                   <h3>Completed Exams</h3>
                   <span>{results.length}</span>
@@ -217,7 +260,6 @@ export default function StudentDashboard() {
 
               <div className="dashboard-stat">
                 <BarChart3 size={28} />
-
                 <div>
                   <h3>Average Grade</h3>
                   <span>{results.length ? `${averageGrade}%` : "N/A"}</span>
@@ -229,7 +271,6 @@ export default function StudentDashboard() {
               <div className="dashboard-card large-card">
                 <div className="section-header">
                   <h2>Urgent Actions</h2>
-
                   <button onClick={() => setActiveTab("exams")}>
                     View All
                     <ChevronRight size={16} />
@@ -241,7 +282,6 @@ export default function StudentDashboard() {
                     <div key={exam.id} className="activity-item">
                       <div>
                         <h3>{exam.title}</h3>
-
                         <p>
                           <Clock size={16} />
                           {exam.duration} mins
@@ -267,7 +307,6 @@ export default function StudentDashboard() {
               <div className="side-column">
                 <div className="dashboard-column">
                   <h2>Quick Actions</h2>
-
                   <div className="flex flex-col gap-6">
                     <button
                       onClick={() => setActiveTab("exams")}
@@ -294,32 +333,33 @@ export default function StudentDashboard() {
         {activeTab === "exams" && (
           <div className="space-y-8">
             <div>
-              <h2 className="tab-heading">My Exams</h2>
+              <h2 className="tab-heading">My Graded Exams</h2>
               <p className="tab-subheading">
-                Exams registered in your workspace.
+                Official evaluated exams registered in your active workspace
+                tracking channels.
               </p>
             </div>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {exams.length === 0 ? (
-                <p className="text-sm italic text-[#8f895f]">
-                  No assignments allocated to your student dashboard currently.
+              {standardExams.length === 0 ? (
+                <p className="text-[18px] italic text-[#8f895f]">
+                  No official assignments allocated to your student dashboard
+                  currently.
                 </p>
               ) : (
-                exams.map((exam) => {
+                standardExams.map((exam) => {
+                  const { isLocked, statusLabel } = getExamLockStatus(exam);
                   const attemptsUsed = exam.attemptsUsed || 0;
                   const maxAttempts = exam.maxAttempts || 1;
-                  const isLockedOut = attemptsUsed >= maxAttempts;
 
                   return (
                     <div key={exam.id} className="student-exam-card panel-card">
                       <div>
                         <div className="flex items-start justify-between gap-2">
                           <h3 className="student-exam-title">{exam.title}</h3>
-
                           <span
                             className={`student-exam-badge ${
-                              isLockedOut ? "student-exam-badge--locked" : ""
+                              isLocked ? "student-exam-badge--locked" : ""
                             }`}
                           >
                             {attemptsUsed}/{maxAttempts} Attempts
@@ -335,7 +375,6 @@ export default function StudentDashboard() {
                             <Clock size={14} />
                             {exam.duration} mins
                           </span>
-
                           <span>
                             Pass Mark: <strong>{exam.passMark}%</strong>
                           </span>
@@ -343,19 +382,75 @@ export default function StudentDashboard() {
                       </div>
 
                       <button
-                        disabled={isLockedOut}
+                        disabled={isLocked}
                         onClick={() => navigate(`/takeexam/${exam.id}`)}
                         className={`student-exam-cta ${
-                          isLockedOut ? "student-exam-cta--locked" : ""
+                          isLocked ? "student-exam-cta--locked" : ""
                         }`}
                       >
-                        {isLockedOut
-                          ? "Attempt Limit Spent"
-                          : "Start Exam Session"}
+                        {statusLabel}
                       </button>
                     </div>
                   );
                 })
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === "practice" && (
+          <div className="space-y-8">
+            <div>
+              <h2 className="tab-heading">Practice Evaluation Sandbox</h2>
+              <p className="tab-subheading">
+                Training modules allocated purely for practical review
+                exercises. Run metrics here bypass locking system rules
+                entirely.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {practiceExams.length === 0 ? (
+                <p className="text-[18px] italic text-[#8f895f]">
+                  No standalone practice configurations assigned to your
+                  distribution group profile yet.
+                </p>
+              ) : (
+                practiceExams.map((exam) => (
+                  <div
+                    key={exam.id}
+                    className="student-exam-card panel-card border-purple-200/50 hover:border-purple-300"
+                  >
+                    <div>
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="student-exam-title">{exam.title}</h3>
+                        <span className="student-exam-badge bg-purple-100 text-purple-800 border border-purple-200">
+                          Practice Track
+                        </span>
+                      </div>
+
+                      <p className="student-exam-desc">
+                        {exam.description || "No description available."}
+                      </p>
+
+                      <div className="student-exam-meta">
+                        <span className="flex items-center gap-1 text-purple-600 font-medium">
+                          <Clock size={14} /> Unlimited Runs
+                        </span>
+                        <span>
+                          Target: <strong>{exam.passMark}%</strong>
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => navigate(`/takeexam/${exam.id}`)}
+                      className="student-exam-cta bg-purple-600 hover:bg-purple-700 text-white"
+                    >
+                      Launch Session
+                    </button>
+                  </div>
+                ))
               )}
             </div>
           </div>
@@ -400,6 +495,11 @@ export default function StudentDashboard() {
                           style={{ color: "#302f24" }}
                         >
                           {res.exam?.title || "Assessment Runtime"}
+                          {res.exam?.isPractice && (
+                            <span className="ml-2 text-[10px] bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded font-bold uppercase tracking-wide border border-purple-100">
+                              Practice
+                            </span>
+                          )}
                         </td>
 
                         <td style={{ color: "var(--olive)" }}>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, ToggleLeft, ToggleRight } from "lucide-react";
 import CreateQuestionModal from "./CreateQuestionModal";
 import { useParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
@@ -17,6 +17,7 @@ export default function ExamDetails() {
   const [assignedGroups, setAssignedGroups] = useState<any[]>([]);
   const [allGroups, setAllGroups] = useState<any[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState("");
+  const [updatingPractice, setUpdatingPractice] = useState(false);
 
   useEffect(() => {
     loadExam();
@@ -25,12 +26,43 @@ export default function ExamDetails() {
     loadAllGroups();
   }, []);
 
+  async function togglePracticeMode() {
+    if (!exam || updatingPractice) return;
+    setUpdatingPractice(true);
+
+    const originalState = exam.isPractice;
+    const targetState = !originalState;
+
+    setExam((prev: any) => ({ ...prev, isPractice: targetState }));
+
+    try {
+      const response = await fetch(`${API_URL}/api/exams/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isPractice: targetState }),
+      });
+
+      if (!response.ok)
+        throw new Error("Synchronization rejected by core backend handler.");
+
+      const updatedExam = await response.json();
+      setExam(updatedExam);
+    } catch (err) {
+      console.error("Error updating exam parameters model layout:", err);
+      setExam((prev: any) => ({ ...prev, isPractice: originalState }));
+    } finally {
+      setUpdatingPractice(false);
+    }
+  }
+
   async function loadExam() {
-    const response = await fetch(`${API_URL}/api/exams/${id}`);
-
-    const data = await response.json();
-
-    setExam(data);
+    try {
+      const response = await fetch(`${API_URL}/api/exams/${id}`);
+      const data = await response.json();
+      setExam(data);
+    } catch (err) {
+      console.error("Error loading core exam context:", err);
+    }
   }
 
   async function loadExamGroups() {
@@ -58,9 +90,7 @@ export default function ExamDetails() {
 
   async function loadQuestions() {
     const response = await fetch(`${API_URL}/api/questions/exam/${id}`);
-
     const data = await response.json();
-
     console.log("QUESTIONS DATA:", data);
     setQuestions(data);
   }
@@ -69,14 +99,12 @@ export default function ExamDetails() {
     await fetch(`${API_URL}/api/questions/${questionId}`, {
       method: "DELETE",
     });
-
     loadQuestions();
   }
-  console.log("QUESTIONS:", questions);
 
   if (!exam) {
     return (
-      <div className="dashboard-bg exam-detail-page items-center justify-center">
+      <div className="dashboard-bg exam-detail-page items-center justify-center flex min-h-screen">
         <p
           className="text-sm font-semibold"
           style={{ color: "var(--olive-dark)" }}
@@ -92,12 +120,46 @@ export default function ExamDetails() {
       <Sidebar />
 
       <main className="exam-detail-main">
-        <div className="mb-8">
-          <p className="exam-detail-kicker">Exam Details</p>
-          <h1 className="exam-detail-title">{exam.title}</h1>
-          <p className="exam-detail-desc">
-            {exam.description || "No custom description set for this exam."}
-          </p>
+        <div className="mb-8 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+          <div>
+            <p className="exam-detail-kicker">Exam Details</p>
+            <h1 className="exam-detail-title">{exam.title}</h1>
+            <p className="exam-detail-desc">
+              {exam.description || "No custom description set for this exam."}
+            </p>
+          </div>
+
+          {/* Interactive Mode Configuration Control Switch */}
+          <div className="flex items-center gap-3 bg-white/40 backdrop-blur-sm px-4 py-3 rounded-xl border border-stone-200/60 self-start">
+            <div className="text-left">
+              <p className="text-xs font-bold uppercase tracking-wide text-stone-500">
+                Mode Setting
+              </p>
+              <p className="text-sm font-semibold text-stone-800">
+                {exam.isPractice
+                  ? "Practice Test Run"
+                  : "Official Exam Session"}
+              </p>
+            </div>
+            <button
+              onClick={togglePracticeMode}
+              disabled={updatingPractice}
+              className={`transition-opacity ${updatingPractice ? "opacity-50" : "hover:opacity-80"}`}
+              title="Toggle practice test parameter rules"
+            >
+              {exam.isPractice ? (
+                <ToggleRight
+                  size={40}
+                  className="text-purple-600 cursor-pointer"
+                />
+              ) : (
+                <ToggleLeft
+                  size={40}
+                  className="text-stone-400 cursor-pointer"
+                />
+              )}
+            </button>
+          </div>
         </div>
 
         <div className="audience-card">
@@ -186,17 +248,18 @@ export default function ExamDetails() {
               </div>
 
               <div className="option-grid">
-                {q.options.map((option: any) => (
-                  <div
-                    key={option.id}
-                    className={`option-row ${option.isCorrect ? "option-row--correct" : ""}`}
-                  >
-                    <span className="truncate pr-2">{option.optionText}</span>
-                    {option.isCorrect && (
-                      <span className="option-correct-badge">✓ Answer</span>
-                    )}
-                  </div>
-                ))}
+                {q.options &&
+                  q.options.map((option: any) => (
+                    <div
+                      key={option.id}
+                      className={`option-row ${option.isCorrect ? "option-row--correct" : ""}`}
+                    >
+                      <span className="truncate pr-2">{option.optionText}</span>
+                      {option.isCorrect && (
+                        <span className="option-correct-badge">✓ Answer</span>
+                      )}
+                    </div>
+                  ))}
               </div>
             </div>
           ))}
