@@ -107,7 +107,7 @@ export const AdminResults = () => {
             <h1 className="results-title">{data.title}</h1>
 
             <button
-              onClick={sExam}
+              onClick={handleReassessExam}
               disabled={isReassessing}
               className="answer-sheet-btn"
               style={{
