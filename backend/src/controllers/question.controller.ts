@@ -104,9 +104,7 @@ export const deleteQuestion = async (
 
 export const importQuestionsFromExcel = async (req: Request, res: Response) => {
   try {
-
     const examIdParam = String(req.params.examId);
-
     const { fileData } = req.body; 
 
     if (!fileData) {
@@ -118,7 +116,6 @@ export const importQuestionsFromExcel = async (req: Request, res: Response) => {
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
     
-
     const rows: any[] = XLSX.utils.sheet_to_json(sheet);
 
     if (rows.length === 0) {
@@ -127,49 +124,48 @@ export const importQuestionsFromExcel = async (req: Request, res: Response) => {
 
     let importedCounter = 0;
 
-
     await prisma.$transaction(async (tx) => {
       for (const row of rows) {
-        const questionText = row["Question"] || row["questionText"] || row["Question Text"];
-        let type = row["Type"] || row["type"] || "SINGLE_CHOICE";
-        let difficulty = row["Difficulty"] || row["difficulty"] || "MEDIUM";
-        const correctValue = String(row["Correct Answer"] || row["correctAnswer"] || row["Answer"] || "").trim();
+        const rawQuestionText = row["Question"] || row["questionText"] || row["Question Text"] || row["question"];
+        const rawType = String(row["Type"] || row["type"] || "SINGLE_CHOICE").toUpperCase().trim().replace(" ", "_");
+        const rawDifficulty = String(row["Difficulty"] || row["difficulty"] || "MEDIUM").toUpperCase().trim();
+        const correctValue = String(row["Correct Answer"] || row["correctAnswer"] || row["Answer"] || row["correctAnswerText"] || "").trim().toLowerCase();
 
-        if (!questionText) continue; 
+        if (!rawQuestionText) continue; 
 
-        type = type.toUpperCase().replace(" ", "_");
-        if (!["SINGLE_CHOICE", "MULTIPLE_CHOICE", "TRUE_FALSE"].includes(type)) {
-          type = "SINGLE_CHOICE";
-        }
+        let validatedType: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "TRUE_FALSE" = "SINGLE_CHOICE";
+        if (rawType === "MULTIPLE_CHOICE") validatedType = "MULTIPLE_CHOICE";
+        if (rawType === "TRUE_FALSE" || rawType === "TRUE/FALSE") validatedType = "TRUE_FALSE";
 
-        difficulty = difficulty.toUpperCase().trim();
-        if (!["EASY", "MEDIUM", "HARD", "EXPERT"].includes(difficulty)) {
-          difficulty = "MEDIUM";
+        let validatedDifficulty: "EASY" | "MEDIUM" | "HARD" | "EXPERT" = "MEDIUM";
+        if (["EASY", "MEDIUM", "HARD", "EXPERT"].includes(rawDifficulty)) {
+          validatedDifficulty = rawDifficulty as any;
         }
 
         const optionsList: string[] = [];
         Object.keys(row).forEach((key) => {
           if (key.toLowerCase().startsWith("option") && row[key]) {
-            optionsList.push(String(row[key]).trim());
+            const cleanOption = String(row[key]).trim();
+            if (cleanOption) optionsList.push(cleanOption);
           }
         });
 
         const newQuestion = await tx.question.create({
           data: {
-            question: questionText,
-            type: type as any,
-            difficulty: difficulty as any,
-            examId: examIdParam, 
+            question: String(rawQuestionText).trim(),
+            type: validatedType,
+            difficulty: validatedDifficulty,
+            examId: examIdParam,
           },
         });
 
-        for (const optText of optionsList) {
-          await tx.questionOption.create({
-            data: {
+        if (optionsList.length > 0) {
+          await tx.questionOption.createMany({
+            data: optionsList.map((optText) => ({
               questionId: newQuestion.id,
               optionText: optText,
-              isCorrect: optText.toLowerCase() === correctValue.toLowerCase(),
-            },
+              isCorrect: optText.toLowerCase() === correctValue,
+            })),
           });
         }
 
@@ -180,11 +176,13 @@ export const importQuestionsFromExcel = async (req: Request, res: Response) => {
     return res.status(200).json({ 
       success: true, 
       count: importedCounter, 
-      message: "Excel data extraction and database sync completed successfully." 
+      message: "Excel questions successfully synchronized with database records." 
     });
 
   } catch (error) {
-    console.error("Bulk Import Fault Sequence Tracker:", error);
-    return res.status(500).json({ message: "Internal server data compilation error." });
+    console.error("Bulk Import Error Details:", error);
+    return res.status(500).json({ 
+      message: "Data validation error. Please verify your spreadsheet headers match the standard template." 
+    });
   }
 };
