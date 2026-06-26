@@ -126,9 +126,9 @@ export const importQuestionsFromExcel = async (req: Request, res: Response) => {
 
     let importedCounter = 0;
 
+
     await prisma.$transaction(async (tx) => {
       for (const row of rows) {
-
         const questionText = row["Question"] || row["questionText"] || row["Question Text"];
         let type = row["Type"] || row["type"] || "SINGLE_CHOICE";
         let difficulty = row["Difficulty"] || row["difficulty"] || "MEDIUM";
@@ -136,12 +136,10 @@ export const importQuestionsFromExcel = async (req: Request, res: Response) => {
 
         if (!questionText) continue; 
 
-
         type = type.toUpperCase().replace(" ", "_");
         if (!["SINGLE_CHOICE", "MULTIPLE_CHOICE", "TRUE_FALSE"].includes(type)) {
           type = "SINGLE_CHOICE";
         }
-
 
         difficulty = difficulty.toUpperCase();
         if (!["EASY", "MEDIUM", "HARD", "EXPERT"].includes(difficulty)) {
@@ -156,27 +154,20 @@ export const importQuestionsFromExcel = async (req: Request, res: Response) => {
           }
         });
 
-   
-        const newQuestion = await tx.question.create({
+        await tx.question.create({
           data: {
             question: questionText,
             type: type as any,
             difficulty: difficulty as any,
             examId: examId,
+            options: {
+              create: optionsList.map((optText) => ({
+                optionText: optText,
+                isCorrect: optText.toLowerCase() === correctValue.toLowerCase(),
+              })),
+            },
           },
         });
-
-
-        if (optionsList.length > 0) {
-          await tx.questionOption.createMany({
-            data: optionsList.map((optText) => ({
-              questionId: newQuestion.id,
-              optionText: optText,
-
-              isCorrect: optText.toLowerCase() === correctValue.toLowerCase(),
-            })),
-          });
-        }
 
         importedCounter++;
       }
