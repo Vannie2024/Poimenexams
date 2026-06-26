@@ -105,11 +105,18 @@ export const deleteQuestion = async (
 export const importQuestionsFromExcel = async (req: Request, res: Response) => {
   try {
     const examIdParam = String(req.params.examId);
-    const { fileData } = req.body; 
+    let { fileData } = req.body; 
 
     if (!fileData) {
       return res.status(400).json({ message: "No workbook data buffer provided." });
     }
+
+   if (fileData.includes(",")) {
+      fileData = fileData.split(",")[1];
+    }
+
+    fileData = fileData.replace(/\s/g, "");
+
 
     const buffer = Buffer.from(fileData, "base64");
     const workbook = XLSX.read(buffer, { type: "buffer" });
