@@ -18,10 +18,11 @@ export default function CreateExamModal({ onClose, onExamCreated }: Props) {
   const [correctMarks, setCorrectMarks] = useState(1);
   const [wrongMarks, setWrongMarks] = useState(0);
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
-
-  // Time Window States
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+
+  // Clean individual state declaration matching your code structure
+  const [isPractice, setIsPractice] = useState(false);
 
   useEffect(() => {
     loadGroups();
@@ -53,6 +54,7 @@ export default function CreateExamModal({ onClose, onExamCreated }: Props) {
         endTime: endTime || null,
         creatorId: localStorage.getItem("userId"),
         groupIds: selectedGroups || [],
+        isPractice, // Sends field safely to the backend controller
       }),
     });
 
@@ -206,6 +208,20 @@ export default function CreateExamModal({ onClose, onExamCreated }: Props) {
                     <span>{group.name}</span>
                   </label>
                 ))}
+              </div>
+
+              {/* Clean Practice Selector implementation matching component structural styles */}
+              <p className="modal-section-label mt-6">Sandbox Configuration</p>
+              <div className="modal-checklist">
+                <label className="modal-checkbox-item">
+                  <input
+                    type="checkbox"
+                    id="isPractice"
+                    checked={isPractice}
+                    onChange={(e) => setIsPractice(e.target.checked)}
+                  />
+                  <span className="font-bold">Designate as Practice Test</span>
+                </label>
               </div>
             </div>
 
