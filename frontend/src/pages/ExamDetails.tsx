@@ -127,9 +127,7 @@ export default function ExamDetails() {
         alert(`Successfully imported ${data.count} questions!`);
         loadQuestions();
       } else {
-        alert(
-          `Import Failed: ${data.message || "Invalid excel formatting structural data layouts."}`,
-        );
+        alert(`Import Failed: ${data.message}`);
       }
     } catch (err) {
       console.error(err);
