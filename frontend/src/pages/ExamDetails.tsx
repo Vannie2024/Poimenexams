@@ -109,39 +109,35 @@ export default function ExamDetails() {
 
     setIsUploading(true);
 
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      try {
-        const base64String = (event.target?.result as string).split(",")[1];
+    const formData = new FormData();
+    formData.append("file", file);
 
-        const response = await fetch(
-          `${API_URL}/api/questions/exam/${id}/bulk-excel`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ fileData: base64String }),
-          },
+    try {
+      const response = await fetch(
+        `${API_URL}/api/questions/exam/${id}/bulk-excel`,
+        {
+          method: "POST",
+          body: formData,
+        },
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`Successfully imported ${data.count} questions!`);
+        loadQuestions();
+      } else {
+        alert(
+          `Import Failed: ${data.message || "Invalid excel formatting structural data layouts."}`,
         );
-
-        const data = await response.json();
-
-        if (response.ok) {
-          alert(`Successfully imported ${data.count} questions!`);
-          loadQuestions();
-        } else {
-          alert(
-            `Import Failed: ${data.message || "Invalid excel formatting structural data layouts."}`,
-          );
-        }
-      } catch (err) {
-        console.error(err);
-        alert("Network fault loading bulk templates.");
-      } finally {
-        setIsUploading(false);
-        if (fileInputRef.current) fileInputRef.current.value = "";
       }
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      console.error(err);
+      alert("Network fault loading bulk templates.");
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   }
 
   if (!exam) {
