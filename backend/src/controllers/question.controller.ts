@@ -115,6 +115,7 @@ export const importQuestionsFromExcel = async (req: Request, res: Response) => {
     const workbook = XLSX.read(buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
+    
 
     const rows: any[] = XLSX.utils.sheet_to_json(sheet);
 
@@ -153,14 +154,14 @@ export const importQuestionsFromExcel = async (req: Request, res: Response) => {
         if (!rawQuestionText.trim()) continue;
 
         let validatedType: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "TRUE_FALSE" = "SINGLE_CHOICE";
-        if (rawType === "MULTIPLE_CHOICE") validatedType = "MULTIPLE_CHOICE";
-        if (rawType === "TRUE_FALSE" || rawType === "TRUE/FALSE" || rawType.includes("TRUE")) validatedType = "TRUE_FALSE";
+        if (rawType.includes("MULTIPLE")) validatedType = "MULTIPLE_CHOICE";
+        if (rawType.includes("TRUE") || rawType.includes("FALSE")) validatedType = "TRUE_FALSE";
 
-  
         let validatedDifficulty: "EASY" | "MEDIUM" | "HARD" | "EXPERT" = "MEDIUM";
         if (["EASY", "MEDIUM", "HARD", "EXPERT"].includes(rawDifficulty)) {
           validatedDifficulty = rawDifficulty as any;
         }
+
 
         const newQuestion = await tx.question.create({
           data: {
@@ -171,13 +172,13 @@ export const importQuestionsFromExcel = async (req: Request, res: Response) => {
           },
         });
 
-        if (optionsList.length > 0) {
-          await tx.questionOption.createMany({
-            data: optionsList.map((optText) => ({
+        for (const optText of optionsList) {
+          await tx.questionOption.create({
+            data: {
               questionId: newQuestion.id,
               optionText: optText,
-              isCorrect: optText.toLowerCase() === correctValue,
-            })),
+              isCorrect: optText.toLowerCase() === correctValue || (validatedType === "TRUE_FALSE" && optText.toLowerCase() === correctValue),
+            },
           });
         }
 
