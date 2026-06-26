@@ -46,6 +46,9 @@ export const getStudentExams = async (
       passMark: eg.exam.passMark,
       maxAttempts: eg.exam.maxAttempts,
       attemptsUsed: eg.exam.attempts.length,
+      isPractice: eg.exam.isPractice, 
+      startTime: eg.exam.startTime,
+      endTime: eg.exam.endTime,
     }));
 
     return res.json(exams);
@@ -71,6 +74,7 @@ export const getStudentHistory = async (
         exam: {
           select: {
             title: true,
+            isPractice: true, 
           },
         },
       },
