@@ -342,16 +342,14 @@ export default function StudentDashboard() {
             <div>
               <h2 className="tab-heading">My Graded Exams</h2>
               <p className="tab-subheading">
-                Official evaluated exams registered in your active workspace
-                tracking channels.
+                Official evaluated exams registered in active tracking channels.
               </p>
             </div>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
               {standardExams.length === 0 ? (
                 <p className="text-[18px] italic text-[#8f895f]">
-                  No official assignments allocated to your student dashboard
-                  currently.
+                  No official assignments allocated currently.
                 </p>
               ) : (
                 standardExams.map((exam) => {
@@ -360,40 +358,35 @@ export default function StudentDashboard() {
                   const maxAttempts = exam.maxAttempts || 1;
 
                   return (
-                    <div key={exam.id} className="student-exam-card panel-card">
+                    <div
+                      key={exam.id}
+                      className={`student-exam-card panel-card transition-all ${isLocked ? "opacity-50 select-none" : ""}`}
+                    >
                       <div>
                         <div className="flex items-start justify-between gap-2">
                           <h3 className="student-exam-title">{exam.title}</h3>
                           <span
-                            className={`student-exam-badge ${
-                              isLocked ? "student-exam-badge--locked" : ""
-                            }`}
+                            className={`student-exam-badge ${isLocked ? "student-exam-badge--locked" : ""}`}
                           >
                             {attemptsUsed}/{maxAttempts} Attempts
                           </span>
                         </div>
-
                         <p className="student-exam-desc">
                           {exam.description || "No description available."}
                         </p>
-
                         <div className="student-exam-meta">
                           <span className="flex items-center gap-1">
-                            <Clock size={14} />
-                            {exam.duration} mins
+                            <Clock size={14} /> {exam.duration} mins
                           </span>
                           <span>
                             Pass Mark: <strong>{exam.passMark}%</strong>
                           </span>
                         </div>
                       </div>
-
                       <button
                         disabled={isLocked}
                         onClick={() => navigate(`/takeexam/${exam.id}`)}
-                        className={`student-exam-cta ${
-                          isLocked ? "student-exam-cta--locked" : ""
-                        }`}
+                        className={`student-exam-cta ${isLocked ? "student-exam-cta--locked" : ""}`}
                       >
                         {statusLabel}
                       </button>
@@ -410,46 +403,53 @@ export default function StudentDashboard() {
             <div>
               <h2 className="tab-heading">Practice Evaluation Sandbox</h2>
               <p className="tab-subheading">
-                Training modules allocated purely for design reference
-                configurations.
+                Practice runs for different exams
               </p>
             </div>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
               {practiceExams.length === 0 ? (
                 <p className="text-[18px] italic text-[#8f895f]">
-                  No custom practice items configured.
+                  No practice tests configured yet.
                 </p>
               ) : (
-                practiceExams.map((exam) => (
-                  <div key={exam.id} className="student-exam-card panel-card">
-                    <div>
-                      <div className="flex items-start justify-between gap-2">
-                        <h3 className="student-exam-title">{exam.title}</h3>
-                        <span className="student-exam-badge">
-                          Practice Track
-                        </span>
-                      </div>
-                      <p className="student-exam-desc">
-                        {exam.description || "No description available."}
-                      </p>
-                      <div className="student-exam-meta">
-                        <span className="flex items-center gap-1">
-                          <Clock size={14} /> Unlimited Runs
-                        </span>
-                        <span>
-                          Target: <strong>{exam.passMark}%</strong>
-                        </span>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => navigate(`/takeexam/${exam.id}`)}
-                      className="student-exam-cta"
+                practiceExams.map((exam) => {
+                  const { isLocked, statusLabel } = getExamLockStatus(exam);
+
+                  return (
+                    <div
+                      key={exam.id}
+                      className={`student-exam-card panel-card transition-all ${isLocked ? "opacity-50 select-none" : ""}`}
                     >
-                      Launch Session
-                    </button>
-                  </div>
-                ))
+                      <div>
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="student-exam-title">{exam.title}</h3>
+                          <span className="student-exam-badge">
+                            Practice Track
+                          </span>
+                        </div>
+                        <p className="student-exam-desc">
+                          {exam.description || "No description available."}
+                        </p>
+                        <div className="student-exam-meta">
+                          <span className="flex items-center gap-1">
+                            <Clock size={14} /> {exam.duration} mins
+                          </span>
+                          <span>
+                            Target: <strong>{exam.passMark}%</strong>
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        disabled={isLocked}
+                        onClick={() => navigate(`/takeexam/${exam.id}`)}
+                        className={`student-exam-cta ${isLocked ? "student-exam-cta--locked" : ""}`}
+                      >
+                        {isLocked ? statusLabel : "Launch Session"}
+                      </button>
+                    </div>
+                  );
+                })
               )}
             </div>
           </div>
