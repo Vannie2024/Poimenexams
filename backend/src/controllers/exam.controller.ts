@@ -180,25 +180,18 @@ export const getExamForAttempt = async (req: Request, res: Response) => {
 
     const exam = await prisma.exam.findUnique({
       where: { id: examId },
-      include: {
-        questions: {
-          include: {
-            options: true,
-          },
-        },
-      },
+      include: { questions: { include: { options: true } } },
     });
 
     if (!exam) {
       return res.status(404).json({ message: "Exam configuration records not found." });
     }
 
-
-    const currentTime = new Date().getTime();
+    const nowUTC = new Date().getTime(); 
 
     if (exam.startTime) {
-      const startTimestamp = new Date(exam.startTime).getTime();
-      if (currentTime < startTimestamp) {
+      const startUTC = new Date(exam.startTime).getTime();
+      if (nowUTC < startUTC) {
         return res.status(403).json({ 
           message: `This exam is locked. It will open for testing on ${new Date(exam.startTime).toLocaleString()}.` 
         });
@@ -206,18 +199,16 @@ export const getExamForAttempt = async (req: Request, res: Response) => {
     }
 
     if (exam.endTime) {
-      const endTimestamp = new Date(exam.endTime).getTime();
-      if (currentTime > endTimestamp) {
-        return res.status(403).json({ 
-          message: "This exam has officially closed and can no longer be initialized." 
-        });
+      const endUTC = new Date(exam.endTime).getTime();
+      if (nowUTC > endUTC) {
+        return res.status(403).json({ message: "This exam has officially closed." });
       }
     }
+
 
     const pastAttemptsCount = await prisma.examAttempt.count({
       where: { examId, studentId },
     });
-
     if (pastAttemptsCount >= exam.maxAttempts) {
       return res.status(403).json({ message: "Access denied. Maximum attempts spent." });
     }
@@ -227,10 +218,7 @@ export const getExamForAttempt = async (req: Request, res: Response) => {
       question: q.question, 
       type: q.type,
       difficulty: q.difficulty,
-      options: q.options.map((opt) => ({
-        id: opt.id,
-        optionText: opt.optionText, 
-      })),
+      options: q.options.map((opt) => ({ id: opt.id, optionText: opt.optionText })),
     }));
 
     return res.json({
@@ -242,8 +230,7 @@ export const getExamForAttempt = async (req: Request, res: Response) => {
       questions: safeQuestions,
     });
   } catch (error) {
-    console.error("Fetch Live Exam Failed:", error);
-    return res.status(500).json({ message: "Server encountered errors validating authorization parameters." });
+    return res.status(500).json({ message: "Server verification issue." });
   }
 };
 
