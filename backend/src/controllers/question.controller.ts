@@ -115,7 +115,7 @@ export const importQuestionsFromExcel = async (req: Request, res: Response) => {
     const workbook = XLSX.read(buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
-    
+
     const rows: any[] = XLSX.utils.sheet_to_json(sheet);
 
     if (rows.length === 0) {
@@ -126,33 +126,45 @@ export const importQuestionsFromExcel = async (req: Request, res: Response) => {
 
     await prisma.$transaction(async (tx) => {
       for (const row of rows) {
-        const rawQuestionText = row["Question"] || row["questionText"] || row["Question Text"] || row["question"];
-        const rawType = String(row["Type"] || row["type"] || "SINGLE_CHOICE").toUpperCase().trim().replace(" ", "_");
-        const rawDifficulty = String(row["Difficulty"] || row["difficulty"] || "MEDIUM").toUpperCase().trim();
-        const correctValue = String(row["Correct Answer"] || row["correctAnswer"] || row["Answer"] || row["correctAnswerText"] || "").trim().toLowerCase();
+        let rawQuestionText = "";
+        let rawType = "SINGLE_CHOICE";
+        let rawDifficulty = "MEDIUM";
+        let correctValue = "";
+        const optionsList: string[] = [];
 
-        if (!rawQuestionText) continue; 
+        Object.keys(row).forEach((key) => {
+          const cleanKey = key.replace(/[\r\n]+/g, "").replace(/\s+/g, "").toLowerCase();
+          const val = row[key];
+
+          if (cleanKey === "question") {
+            rawQuestionText = String(val);
+          } else if (cleanKey === "type") {
+            rawType = String(val).toUpperCase().trim().replace(" ", "_");
+          } else if (cleanKey === "difficulty") {
+            rawDifficulty = String(val).toUpperCase().trim();
+          } else if (cleanKey === "correctanswer" || cleanKey === "answer") {
+            correctValue = String(val).trim().toLowerCase();
+          } else if (cleanKey.startsWith("option") && val) {
+            const cleanOption = String(val).trim();
+            if (cleanOption) optionsList.push(cleanOption);
+          }
+        });
+
+        if (!rawQuestionText.trim()) continue;
 
         let validatedType: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "TRUE_FALSE" = "SINGLE_CHOICE";
         if (rawType === "MULTIPLE_CHOICE") validatedType = "MULTIPLE_CHOICE";
-        if (rawType === "TRUE_FALSE" || rawType === "TRUE/FALSE") validatedType = "TRUE_FALSE";
+        if (rawType === "TRUE_FALSE" || rawType === "TRUE/FALSE" || rawType.includes("TRUE")) validatedType = "TRUE_FALSE";
 
+  
         let validatedDifficulty: "EASY" | "MEDIUM" | "HARD" | "EXPERT" = "MEDIUM";
         if (["EASY", "MEDIUM", "HARD", "EXPERT"].includes(rawDifficulty)) {
           validatedDifficulty = rawDifficulty as any;
         }
 
-        const optionsList: string[] = [];
-        Object.keys(row).forEach((key) => {
-          if (key.toLowerCase().startsWith("option") && row[key]) {
-            const cleanOption = String(row[key]).trim();
-            if (cleanOption) optionsList.push(cleanOption);
-          }
-        });
-
         const newQuestion = await tx.question.create({
           data: {
-            question: String(rawQuestionText).trim(),
+            question: rawQuestionText.trim(),
             type: validatedType,
             difficulty: validatedDifficulty,
             examId: examIdParam,
@@ -176,13 +188,13 @@ export const importQuestionsFromExcel = async (req: Request, res: Response) => {
     return res.status(200).json({ 
       success: true, 
       count: importedCounter, 
-      message: "Excel questions successfully synchronized with database records." 
+      message: "Excel data successfully scrubbed and synchronized." 
     });
 
   } catch (error) {
     console.error("Bulk Import Error Details:", error);
     return res.status(500).json({ 
-      message: "Data validation error. Please verify your spreadsheet headers match the standard template." 
+      message: "Data validation error inside row mapping transaction loops." 
     });
   }
 };
