@@ -104,13 +104,14 @@ export const deleteQuestion = async (
 
 export const importQuestionsFromExcel = async (req: Request, res: Response) => {
   try {
-    const examId = String(req.params.examId);
+
+    const examIdParam = String(req.params.examId);
+
     const { fileData } = req.body; 
 
     if (!fileData) {
       return res.status(400).json({ message: "No workbook data buffer provided." });
     }
-
 
     const buffer = Buffer.from(fileData, "base64");
     const workbook = XLSX.read(buffer, { type: "buffer" });
@@ -141,11 +142,10 @@ export const importQuestionsFromExcel = async (req: Request, res: Response) => {
           type = "SINGLE_CHOICE";
         }
 
-        difficulty = difficulty.toUpperCase();
+        difficulty = difficulty.toUpperCase().trim();
         if (!["EASY", "MEDIUM", "HARD", "EXPERT"].includes(difficulty)) {
           difficulty = "MEDIUM";
         }
-
 
         const optionsList: string[] = [];
         Object.keys(row).forEach((key) => {
@@ -154,20 +154,24 @@ export const importQuestionsFromExcel = async (req: Request, res: Response) => {
           }
         });
 
-        await tx.question.create({
+        const newQuestion = await tx.question.create({
           data: {
             question: questionText,
             type: type as any,
             difficulty: difficulty as any,
-            examId: examId,
-            options: {
-              create: optionsList.map((optText) => ({
-                optionText: optText,
-                isCorrect: optText.toLowerCase() === correctValue.toLowerCase(),
-              })),
-            },
+            examId: examIdParam, 
           },
         });
+
+        for (const optText of optionsList) {
+          await tx.questionOption.create({
+            data: {
+              questionId: newQuestion.id,
+              optionText: optText,
+              isCorrect: optText.toLowerCase() === correctValue.toLowerCase(),
+            },
+          });
+        }
 
         importedCounter++;
       }
@@ -176,7 +180,7 @@ export const importQuestionsFromExcel = async (req: Request, res: Response) => {
     return res.status(200).json({ 
       success: true, 
       count: importedCounter, 
-      message: "Data extraction metrics updated successfully." 
+      message: "Excel data extraction and database sync completed successfully." 
     });
 
   } catch (error) {
