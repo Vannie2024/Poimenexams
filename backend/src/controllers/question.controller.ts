@@ -199,10 +199,11 @@ export const importQuestionsFromExcel = async (req: Request & { file?: Express.M
       message: "Excel data successfully scrubbed and synchronized." 
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Bulk Import Error Details:", error);
+    
     return res.status(500).json({ 
-      message: "Data validation error inside row mapping transaction loops." 
+      message: error?.message || "Internal server data compilation error." 
     });
   }
 };
