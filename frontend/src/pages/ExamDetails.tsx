@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Plus, ToggleLeft, ToggleRight } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Plus, ToggleLeft, ToggleRight, FileUp } from "lucide-react";
 import CreateQuestionModal from "./CreateQuestionModal";
 import { useParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
@@ -9,15 +9,16 @@ export default function ExamDetails() {
   const { id } = useParams();
 
   const [exam, setExam] = useState<any>(null);
-
   const [questions, setQuestions] = useState<any[]>([]);
-
   const [showQuestionModal, setShowQuestionModal] = useState(false);
 
   const [assignedGroups, setAssignedGroups] = useState<any[]>([]);
   const [allGroups, setAllGroups] = useState<any[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState("");
   const [updatingPractice, setUpdatingPractice] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadExam();
@@ -102,6 +103,47 @@ export default function ExamDetails() {
     loadQuestions();
   }
 
+  async function handleExcelUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const base64String = (event.target?.result as string).split(",")[1];
+
+        const response = await fetch(
+          `${API_URL}/api/questions/exam/${id}/bulk-excel`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fileData: base64String }),
+          },
+        );
+
+        const data = await response.json();
+
+        if (response.ok) {
+          alert(`Successfully imported ${data.count} questions!`);
+          loadQuestions();
+        } else {
+          alert(
+            `Import Failed: ${data.message || "Invalid excel formatting structural data layouts."}`,
+          );
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Network fault loading bulk templates.");
+      } finally {
+        setIsUploading(false);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
   if (!exam) {
     return (
       <div className="dashboard-bg exam-detail-page items-center justify-center flex min-h-screen">
@@ -129,7 +171,6 @@ export default function ExamDetails() {
             </p>
           </div>
 
-          {/* Interactive Mode Configuration Control Switch */}
           <div className="flex items-center gap-3 bg-white/40 backdrop-blur-sm px-4 py-3 rounded-xl border border-stone-200/60 self-start">
             <div className="text-left">
               <p className="text-xs font-bold uppercase tracking-wide text-stone-500">
@@ -215,12 +256,31 @@ export default function ExamDetails() {
                 question(s)
               </p>
             </div>
-            <button
-              className="action-btn flex items-center gap-2 px-4 py-2 text-sm"
-              onClick={() => setShowQuestionModal(true)}
-            >
-              <Plus size={16} /> Add Question
-            </button>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleExcelUpload}
+                accept=".xlsx, .xls"
+                className="hidden"
+              />
+              <button
+                className="action-btn flex items-center gap-2 px-4 py-2 text-sm bg-emerald-700 hover:bg-emerald-800 border-none text-white"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+              >
+                <FileUp size={16} />{" "}
+                {isUploading ? "Uploading..." : "Import via Excel"}
+              </button>
+
+              <button
+                className="action-btn flex items-center gap-2 px-4 py-2 text-sm"
+                onClick={() => setShowQuestionModal(true)}
+              >
+                <Plus size={16} /> Add Question
+              </button>
+            </div>
           </div>
 
           {questions.map((q, index) => (
@@ -238,7 +298,6 @@ export default function ExamDetails() {
                   </div>
                   <h3 className="question-text">{q.question}</h3>
                 </div>
-
                 <button
                   className="question-delete"
                   onClick={() => deleteQuestion(q.id)}
