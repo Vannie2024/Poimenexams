@@ -46,6 +46,6 @@ router.get("/:examId/groups", getExamGroups);
 
 router.post("/:examId/groups", assignGroupToExam);
 
-router.post("/api/exams/:examId/reassess", reassessExamAttempts);
+router.post("/:examId/reassess", reassessExamAttempts);
 
 export default router;

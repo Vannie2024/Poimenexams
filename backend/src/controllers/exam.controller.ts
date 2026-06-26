@@ -193,14 +193,25 @@ export const getExamForAttempt = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Exam configuration records not found." });
     }
 
-    const currentTime = new Date();
-    if (exam.startTime && currentTime.getTime() < new Date(exam.startTime).getTime()) {
-      return res.status(403).json({ 
-        message: `This exam is locked. It opens on ${new Date(exam.startTime).toLocaleString()}.` 
-      });
+
+    const currentTime = new Date().getTime();
+
+    if (exam.startTime) {
+      const startTimestamp = new Date(exam.startTime).getTime();
+      if (currentTime < startTimestamp) {
+        return res.status(403).json({ 
+          message: `This exam is locked. It will open for testing on ${new Date(exam.startTime).toLocaleString()}.` 
+        });
+      }
     }
-    if (exam.endTime && currentTime.getTime() > new Date(exam.endTime).getTime()) {
-      return res.status(403).json({ message: "This exam has officially closed." });
+
+    if (exam.endTime) {
+      const endTimestamp = new Date(exam.endTime).getTime();
+      if (currentTime > endTimestamp) {
+        return res.status(403).json({ 
+          message: "This exam has officially closed and can no longer be initialized." 
+        });
+      }
     }
 
     const pastAttemptsCount = await prisma.examAttempt.count({
