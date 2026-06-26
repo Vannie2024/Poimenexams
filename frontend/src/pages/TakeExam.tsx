@@ -62,8 +62,12 @@ export const TakeExam: React.FC = () => {
           throw new Error("No authenticated student identity discovered.");
         }
 
+        const storedUserId =
+          localStorage.getItem("userId") ||
+          JSON.parse(localStorage.getItem("user") || "{}").id;
+
         const response = await fetch(
-          `${API_URL}/api/exams/${examId}/attempt?studentId=${user.id}`,
+          `${API_URL}/api/exams/${examId}/attempt?studentId=${storedUserId}&clientTime=${new Date().toISOString()}`,
         );
 
         if (!response.ok) {
