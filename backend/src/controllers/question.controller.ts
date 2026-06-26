@@ -102,12 +102,12 @@ export const deleteQuestion = async (
   }
 };
 
-export const importQuestionsFromExcel = async (req: Request, res: Response) => {
+export const importQuestionsFromExcel = async (req: Request & { file?: Express.Multer.File }, res: Response) => {
   try {
     const examIdParam = String(req.params.examId);
     let { fileData } = req.body; 
 
-    if (!fileData) {
+    if (!req.file || !req.file.buffer) {
       return res.status(400).json({ message: "No workbook data buffer provided." });
     }
 
