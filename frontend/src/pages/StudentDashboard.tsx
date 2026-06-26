@@ -87,8 +87,10 @@ export default function StudentDashboard() {
     const start = exam.startTime ? new Date(exam.startTime) : null;
     const end = exam.endTime ? new Date(exam.endTime) : null;
 
-    const isNotStartedYet = start ? currentTime < start : false;
-    const isEnded = end ? currentTime > end : false;
+    const isNotStartedYet = start
+      ? currentTime.getTime() < start.getTime()
+      : false;
+    const isEnded = end ? currentTime.getTime() > end.getTime() : false;
     const isAttemptsSpent = attemptsUsed >= maxAttempts;
 
     const isLocked = isNotStartedYet || isEnded || isAttemptsSpent;
@@ -278,24 +280,29 @@ export default function StudentDashboard() {
                 </div>
 
                 <div className="activity-feed">
-                  {availableExams.slice(0, 5).map((exam) => (
-                    <div key={exam.id} className="activity-item">
-                      <div>
-                        <h3>{exam.title}</h3>
-                        <p>
-                          <Clock size={16} />
-                          {exam.duration} mins
-                          <span>•</span>
-                          Cutoff: {exam.passMark}%
-                        </p>
+                  {availableExams.slice(0, 5).map((exam) => {
+                    const { isLocked } = getExamLockStatus(exam);
+                    return (
+                      <div
+                        key={exam.id}
+                        className={`activity-item transition-all ${isLocked ? "opacity-40 pointer-events-none" : ""}`}
+                      >
+                        <div>
+                          <h3>{exam.title}</h3>
+                          <p>
+                            <Clock size={16} /> {exam.duration} mins
+                            <span>•</span> Cutoff: {exam.passMark}%
+                          </p>
+                        </div>
+                        <button
+                          disabled={isLocked}
+                          onClick={() => navigate(`/takeexam/${exam.id}`)}
+                        >
+                          <ArrowRight size={16} />
+                        </button>
                       </div>
-
-                      <button onClick={() => navigate(`/takeexam/${exam.id}`)}>
-                        <ArrowRight size={16} />
-                      </button>
-                    </div>
-                  ))}
-
+                    );
+                  })}
                   {availableExams.length === 0 && (
                     <p className="text-[18px] italic text-[#8f895f]">
                       No pending exam interactions required.
@@ -403,38 +410,31 @@ export default function StudentDashboard() {
             <div>
               <h2 className="tab-heading">Practice Evaluation Sandbox</h2>
               <p className="tab-subheading">
-                Training modules allocated purely for practical review
-                exercises. Run metrics here bypass locking system rules
-                entirely.
+                Training modules allocated purely for design reference
+                configurations.
               </p>
             </div>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
               {practiceExams.length === 0 ? (
                 <p className="text-[18px] italic text-[#8f895f]">
-                  No standalone practice configurations assigned to your
-                  distribution group profile yet.
+                  No custom practice items configured.
                 </p>
               ) : (
                 practiceExams.map((exam) => (
-                  <div
-                    key={exam.id}
-                    className="student-exam-card panel-card border-purple-200/50 hover:border-purple-300"
-                  >
+                  <div key={exam.id} className="student-exam-card panel-card">
                     <div>
                       <div className="flex items-start justify-between gap-2">
                         <h3 className="student-exam-title">{exam.title}</h3>
-                        <span className="student-exam-badge bg-purple-100 text-purple-800 border border-purple-200">
+                        <span className="student-exam-badge">
                           Practice Track
                         </span>
                       </div>
-
                       <p className="student-exam-desc">
                         {exam.description || "No description available."}
                       </p>
-
                       <div className="student-exam-meta">
-                        <span className="flex items-center gap-1 text-purple-600 font-medium">
+                        <span className="flex items-center gap-1">
                           <Clock size={14} /> Unlimited Runs
                         </span>
                         <span>
@@ -442,10 +442,9 @@ export default function StudentDashboard() {
                         </span>
                       </div>
                     </div>
-
                     <button
                       onClick={() => navigate(`/takeexam/${exam.id}`)}
-                      className="student-exam-cta bg-purple-600 hover:bg-purple-700 text-white"
+                      className="student-exam-cta"
                     >
                       Launch Session
                     </button>
