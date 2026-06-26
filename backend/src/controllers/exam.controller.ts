@@ -1,11 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 
-
-export const getExams = async (
-  req: Request,
-  res: Response
-) => {
+export const getExams = async (req: Request, res: Response) => {
   try {
     const exams = await prisma.exam.findMany({
       include: {
@@ -23,17 +19,11 @@ export const getExams = async (
     return res.json(exams);
   } catch (error) {
     console.error(error);
-
-    return res.status(500).json({
-      message: "Server Error",
-    });
+    return res.status(500).json({ message: "Server Error" });
   }
 };
 
-export const createExam = async (
-  req: Request,
-  res: Response
-) => {
+export const createExam = async (req: Request, res: Response) => {
   try {
     const {
       title,
@@ -51,84 +41,49 @@ export const createExam = async (
       groupIds,
       startTime,
       endTime,
+      isPractice,
     } = req.body;
 
-    const creator =
-      await prisma.user.findUnique({
-        where: {
-          id: creatorId,
-        },
-      });
 
-      console.log("creatorId =", creatorId);
+    const creator = await prisma.user.findUnique({
+      where: { id: creatorId },
+    });
 
     if (!creator) {
-      return res.status(404).json({
-        message: "User not found",
-      });
+      return res.status(404).json({ message: "User not found" });
     }
 
-
-    const user = await prisma.user.findUnique({
-        where: {
-            id: creatorId,
+    const exam = await prisma.exam.create({
+      data: {
+        title,
+        description,
+        duration: Number(duration),
+        passMark: Number(passMark),
+        markingSystem,
+        correctMarks: Number(correctMarks || 0),
+        wrongMarks: Number(wrongMarks || 0),
+        startTime: startTime ? new Date(startTime) : null,
+        endTime: endTime ? new Date(endTime) : null,
+        shuffleQuestions: Boolean(shuffleQuestions),
+        showResultsImmediately: Boolean(showResultsImmediately),
+        allowRetakes: Boolean(allowRetakes),
+        maxAttempts: Number(maxAttempts || 1),
+        isPractice: Boolean(isPractice),
+        creatorId,
+        examGroups: {
+          create: groupIds?.map((groupId: string) => ({ groupId })) || [],
         },
-        });
-
-        if (!user) {
-        return res.status(404).json({
-            message: "User not found",
-        });
-        }
-
-    const exam =
-      await prisma.exam.create({
-        data: {
-          title,
-          description,
-          duration,
-          passMark,
-
-          markingSystem,
-          correctMarks,
-          wrongMarks,
-
-          startTime: startTime ? new Date(startTime) : null,
-          endTime: endTime ? new Date(endTime) : null,
-          shuffleQuestions,
-          showResultsImmediately,
-          allowRetakes,
-          maxAttempts,
-
-          creatorId,
-
-          examGroups: {
-            create:
-              groupIds?.map(
-                (
-                  groupId: string
-                ) => ({
-                  groupId,
-                })
-              ) || [],
-          },
-        },
-      });
+      },
+    });
 
     return res.status(201).json(exam);
   } catch (error) {
     console.error(error);
-
-    return res.status(500).json({
-      message: "Server Error",
-    });
+    return res.status(500).json({ message: "Server Error" });
   }
 };
 
-export const getExamById = async (
-  req: Request,
-  res: Response
-) => {
+export const getExamById = async (req: Request, res: Response) => {
   try {
     const id = String(req.params.id);
 
@@ -144,23 +99,20 @@ export const getExamById = async (
       },
     });
 
+    if (!exam) {
+      return res.status(404).json({ message: "Exam not found" });
+    }
+
     return res.json(exam);
   } catch (error) {
     console.error(error);
-
-    return res.status(500).json({
-      message: "Server Error",
-    });
+    return res.status(500).json({ message: "Server Error" });
   }
 };
 
-export const updateExam = async (
-  req: Request,
-  res: Response
-) => {
+export const updateExam = async (req: Request, res: Response) => {
   try {
     const id = String(req.params.id);
-
     const {
       title,
       description,
@@ -175,6 +127,7 @@ export const updateExam = async (
       maxAttempts,
       startTime,
       endTime,
+      isPractice,
     } = req.body;
 
     const exam = await prisma.exam.update({
@@ -182,58 +135,41 @@ export const updateExam = async (
       data: {
         title,
         description,
-        duration,
-        passMark,
+        duration: Number(duration),
+        passMark: Number(passMark),
         markingSystem,
-        correctMarks,
-        wrongMarks,
+        correctMarks: Number(correctMarks || 0),
+        wrongMarks: Number(wrongMarks || 0),
         startTime: startTime ? new Date(startTime) : null,
         endTime: endTime ? new Date(endTime) : null,
-        shuffleQuestions,
-        showResultsImmediately,
-        allowRetakes,
-        maxAttempts,
+        shuffleQuestions: Boolean(shuffleQuestions),
+        showResultsImmediately: Boolean(showResultsImmediately),
+        allowRetakes: Boolean(allowRetakes),
+        maxAttempts: Number(maxAttempts || 1),
+        isPractice: Boolean(isPractice),
       },
     });
 
     return res.json(exam);
   } catch (error) {
     console.error(error);
-
-    return res.status(500).json({
-      message: "Server Error",
-    });
+    return res.status(500).json({ message: "Server Error" });
   }
 };
 
-export const deleteExam = async (
-  req: Request,
-  res: Response
-) => {
+export const deleteExam = async (req: Request, res: Response) => {
   try {
     const id = String(req.params.id);
 
-    await prisma.examGroup.deleteMany({
-      where: {
-        examId: id,
-      },
-    });
+    await prisma.$transaction([
+      prisma.examGroup.deleteMany({ where: { examId: id } }),
+      prisma.exam.delete({ where: { id } }),
+    ]);
 
-    await prisma.exam.delete({
-      where: {
-        id,
-      },
-    });
-
-    return res.json({
-      message: "Deleted",
-    });
+    return res.json({ message: "Deleted" });
   } catch (error) {
     console.error(error);
-
-    return res.status(500).json({
-      message: "Server Error",
-    });
+    return res.status(500).json({ message: "Server Error" });
   }
 };
 
@@ -258,28 +194,21 @@ export const getExamForAttempt = async (req: Request, res: Response) => {
     }
 
     const currentTime = new Date();
-    if (exam.startTime && currentTime < new Date(exam.startTime)) {
+    if (exam.startTime && currentTime.getTime() < new Date(exam.startTime).getTime()) {
       return res.status(403).json({ 
-        message: `This exam is locked. It will open for testing on ${new Date(exam.startTime).toLocaleString()}.` 
+        message: `This exam is locked. It opens on ${new Date(exam.startTime).toLocaleString()}.` 
       });
     }
-    if (exam.endTime && currentTime > new Date(exam.endTime)) {
-      return res.status(403).json({ 
-        message: "This exam has officially closed and can no longer be initialized." 
-      });
+    if (exam.endTime && currentTime.getTime() > new Date(exam.endTime).getTime()) {
+      return res.status(403).json({ message: "This exam has officially closed." });
     }
 
     const pastAttemptsCount = await prisma.examAttempt.count({
-      where: {
-        examId: examId,
-        studentId: studentId,
-      },
+      where: { examId, studentId },
     });
 
     if (pastAttemptsCount >= exam.maxAttempts) {
-      return res.status(403).json({ 
-        message: `Access denied. You have exhausted your maximum limit of ${exam.maxAttempts} attempt(s) for this assessment.` 
-      });
+      return res.status(403).json({ message: "Access denied. Maximum attempts spent." });
     }
 
     const safeQuestions = exam.questions.map((q) => ({
@@ -327,62 +256,55 @@ export const submitExamAttempt = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Target exam configuration unavailable." });
     }
 
-
-    const pastAttemptsCount = await prisma.examAttempt.count({
-      where: { examId, studentId: String(studentId) },
-    });
-
-    if (pastAttemptsCount >= exam.maxAttempts) {
-      return res.status(403).json({ message: "Evaluation processing denied. Maximum attempts exceeded." });
-    }
-
     let pointsEarned = 0;
-    let totalQuestions = exam.questions.length;
-
+    const totalQuestions = exam.questions.length;
     const finalAnswersToCreate: any[] = [];
 
     exam.questions.forEach((q) => {
-        const chosenOptionId = answers[q.id];
-        const correctOption = q.options.find((o) => o.isCorrect);
-        
-        const isCorrect = correctOption ? chosenOptionId === correctOption.id : false;
+      const chosenOptionId = answers[q.id];
+      const correctOption = q.options.find((o) => o.isCorrect);
+      const isCorrect = correctOption ? chosenOptionId === correctOption.id : false;
 
-
-        if (exam.markingSystem === "NEGATIVE") {
-            if (isCorrect) {
-            pointsEarned += exam.correctMarks;
-            } else if (chosenOptionId) {
-            pointsEarned -= Math.abs(exam.wrongMarks);
-            }
-        } else if (exam.markingSystem === "CUSTOM") {
-            if (isCorrect) pointsEarned += exam.correctMarks;
-        } else {
-
-            if (isCorrect) pointsEarned += 1;
+      if (exam.markingSystem === "NEGATIVE") {
+        if (isCorrect) {
+          pointsEarned += exam.correctMarks;
+        } else if (chosenOptionId) {
+          pointsEarned -= Math.abs(exam.wrongMarks);
         }
+      } else if (exam.markingSystem === "CUSTOM") {
+        if (isCorrect) pointsEarned += exam.correctMarks;
+      } else {
+        if (isCorrect) pointsEarned += 1;
+      }
 
-
-        finalAnswersToCreate.push({
-            questionId: q.id,
-            isCorrect,
-            selectedOptionId: chosenOptionId, 
-        });
-        });
-
+      finalAnswersToCreate.push({
+        questionId: q.id,
+        isCorrect,
+        selectedOptionId: chosenOptionId, 
+      });
+    });
 
     const maxPossiblePoints = exam.markingSystem === "STANDARD" ? totalQuestions : (totalQuestions * exam.correctMarks);
     const finalPercentage = maxPossiblePoints > 0 ? Math.max(0, (pointsEarned / maxPossiblePoints) * 100) : 0;
     const passed = finalPercentage >= exam.passMark;
 
- 
+
     const resultAttempt = await prisma.$transaction(async (tx) => {
+      const pastAttemptsCount = await tx.examAttempt.count({
+        where: { examId, studentId: String(studentId) },
+      });
+
+      if (pastAttemptsCount >= exam.maxAttempts) {
+        throw new Error("MAX_ATTEMPTS_EXCEEDED");
+      }
+
       const attempt = await tx.examAttempt.create({
         data: {
           examId,
           studentId: String(studentId),
           score: pointsEarned,
           percentage: finalPercentage,
-          passed: passed, 
+          passed, 
           attemptNumber: pastAttemptsCount + 1,
           submittedAt: new Date(),
         },
@@ -417,7 +339,10 @@ export const submitExamAttempt = async (req: Request, res: Response) => {
       passed: resultAttempt.passed,
       showResultsImmediately: exam.showResultsImmediately,
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === "MAX_ATTEMPTS_EXCEEDED") {
+      return res.status(403).json({ message: "Evaluation processing denied. Maximum attempts exceeded." });
+    }
     console.error("Marking Engine Critical Exception:", error);
     return res.status(500).json({ message: "Internal server processing failure grading candidate submission sheet." });
   }
@@ -458,7 +383,6 @@ export const getAttemptDetails = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Requested performance tracking ledger entry missing." });
     }
 
-
     if (!attempt.exam.showResultsImmediately) {
       return res.json({
         showResultsImmediately: false,
@@ -467,7 +391,6 @@ export const getAttemptDetails = async (req: Request, res: Response) => {
         message: "Your submission has been securely stored. Results will be released by the instructor."
       });
     }
-
 
     const diagnosticReview = attempt.answers.map((ans) => ({
       questionId: ans.questionId,
@@ -497,12 +420,11 @@ export const getAttemptDetails = async (req: Request, res: Response) => {
   }
 };
 
-
 export const getExamGroups = async (req: Request, res: Response) => {
   try {
     const { examId } = req.params;
     const examGroups = await prisma.examGroup.findMany({
-      where: { examId: examId as string },
+      where: { examId: String(examId) },
       include: { group: true },
     });
 
@@ -520,7 +442,7 @@ export const assignGroupToExam = async (req: Request, res: Response) => {
 
     const existing = await prisma.examGroup.findUnique({
       where: {
-        examId_groupId: { examId: examId as string, groupId },
+        examId_groupId: { examId: String(examId), groupId: String(groupId) },
       },
     });
 
@@ -529,7 +451,7 @@ export const assignGroupToExam = async (req: Request, res: Response) => {
     }
 
     const assignment = await prisma.examGroup.create({
-      data: { examId: examId as string, groupId },
+      data: { examId: String(examId), groupId: String(groupId) },
     });
 
     return res.status(201).json(assignment);
@@ -602,7 +524,7 @@ export const reassessExamAttempts = async (req: Request, res: Response) => {
           data: {
             score: pointsEarned,
             percentage: finalPercentage,
-            passed: passed
+            passed
           }
         });
       }
@@ -614,6 +536,3 @@ export const reassessExamAttempts = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Failed to cleanly reassess exam data pools." });
   }
 };
-
-
-

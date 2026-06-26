@@ -11,6 +11,7 @@ import {
   getAttemptDetails,
   getExamGroups,
   assignGroupToExam,
+  reassessExamAttempts
 
 } from "../controllers/exam.controller";
 
@@ -20,7 +21,8 @@ console.log("getExamForAttempt =", getExamForAttempt);
 console.log("submitExamAttempt =", submitExamAttempt);
 console.log("getAttemptDetails =", getAttemptDetails);
 console.log("getExamGroups =", getExamGroups);
-console.log("assignGroupToExam =", assignGroupToExam);  
+console.log("assignGroupToExam =", assignGroupToExam);
+console.log("reassessExamAttempts =", reassessExamAttempts);
 
 const router = Router();
 
@@ -43,5 +45,7 @@ router.get("/attempt/:attemptId", getAttemptDetails);
 router.get("/:examId/groups", getExamGroups);
 
 router.post("/:examId/groups", assignGroupToExam);
+
+router.post("/api/exams/:examId/reassess", reassessExamAttempts);
 
 export default router;
