@@ -110,6 +110,19 @@ export default function ExamDetails() {
     setIsUploading(true);
 
     const formData = new FormData();
+
+    console.log("Name:", file.name);
+    console.log("Type:", file.type);
+    console.log("Size:", file.size);
+
+    const bytes = new Uint8Array(await file.arrayBuffer());
+
+    console.log(
+      "First 8 bytes:",
+      Array.from(bytes.slice(0, 8))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join(""),
+    );
     formData.append("file", file);
 
     try {
