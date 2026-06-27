@@ -110,6 +110,14 @@ export const importQuestionsFromExcel = async (req: Request & { file?: Express.M
       return res.status(400).json({ message: "No authentic workbook file attached." });
     }
 
+    console.log("Original name:", req.file.originalname);
+    console.log("Mime type:", req.file.mimetype);
+    console.log("Size:", req.file.size);
+    console.log(
+      "First 8 bytes (hex):",
+      req.file.buffer.slice(0, 8).toString("hex")
+    );
+
     const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
