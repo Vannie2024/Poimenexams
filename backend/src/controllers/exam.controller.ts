@@ -276,7 +276,7 @@ export const submitExamAttempt = async (req: Request, res: Response) => {
       if (exam.markingSystem === "NEGATIVE") {
         if (isCorrect) {
           pointsEarned += exam.correctMarks;
-        } else {
+        } else if (chosenOptionId) {
           pointsEarned -= Math.abs(exam.wrongMarks);
         }
       } else if (exam.markingSystem === "CUSTOM") {
@@ -515,11 +515,12 @@ export const reassessExamAttempts = async (req: Request, res: Response) => {
           }
 
           if (exam.markingSystem === "NEGATIVE") {
-            if (isCorrect) pointsEarned += exam.correctMarks;
-            else {
+            if (isCorrect) {
+              pointsEarned += exam.correctMarks;
+            } else if (chosenOptionId) {
               pointsEarned -= Math.abs(exam.wrongMarks);
             }
-          } else if (exam.markingSystem === "CUSTOM") {
+          }else if (exam.markingSystem === "CUSTOM") {
             if (isCorrect) pointsEarned += exam.correctMarks;
           } else {
             if (isCorrect) pointsEarned += 1;
