@@ -477,73 +477,108 @@ export const reassessExamAttempts = async (req: Request, res: Response) => {
       where: { id: examId },
       include: {
         questions: {
-          include: { options: true },
+          include: {
+            options: true,
+          },
         },
       },
     });
 
-    if (!exam) return res.status(404).json({ message: "Target exam configuration not found." });
+    if (!exam) {
+      return res
+        .status(404)
+        .json({ message: "Target exam configuration not found." });
+    }
 
     const attempts = await prisma.examAttempt.findMany({
       where: { examId },
       include: {
         answers: {
-          include: { selectedOptions: true }
-        }
-      }
+          include: {
+            selectedOptions: true,
+          },
+        },
+      },
     });
 
     const totalQuestions = exam.questions.length;
-    const maxPossiblePoints = exam.markingSystem === "STANDARD" ? totalQuestions : (totalQuestions * exam.correctMarks);
+    const maxPossiblePoints =
+      exam.markingSystem === "STANDARD"
+        ? totalQuestions
+        : totalQuestions * exam.correctMarks;
 
-    await prisma.$transaction(async (tx) => {
-      for (const attempt of attempts) {
-        let pointsEarned = 0;
 
-        for (const q of exam.questions) {
-          const matchingAnswerRecord = attempt.answers.find((a) => a.questionId === q.id);
-          const chosenOptionId = matchingAnswerRecord?.selectedOptions[0]?.optionId;
-          
-          const correctOption = q.options.find((o) => o.isCorrect);
-          const isCorrect = correctOption ? chosenOptionId === correctOption.id : false;
+    for (const attempt of attempts) {
+      let pointsEarned = 0;
 
-          if (matchingAnswerRecord) {
-            await tx.answer.update({
-              where: { id: matchingAnswerRecord.id },
-              data: { isCorrect }
-            });
-          }
+      for (const q of exam.questions) {
+        const matchingAnswerRecord = attempt.answers.find(
+          (a) => a.questionId === q.id
+        );
 
-          if (exam.markingSystem === "NEGATIVE") {
-            if (isCorrect) {
-              pointsEarned += exam.correctMarks;
-            } else if (chosenOptionId) {
-              pointsEarned -= Math.abs(exam.wrongMarks);
-            }
-          }else if (exam.markingSystem === "CUSTOM") {
-            if (isCorrect) pointsEarned += exam.correctMarks;
-          } else {
-            if (isCorrect) pointsEarned += 1;
-          }
+        const chosenOptionId =
+          matchingAnswerRecord?.selectedOptions[0]?.optionId;
+
+        const correctOption = q.options.find((o) => o.isCorrect);
+
+        const isCorrect = correctOption
+          ? chosenOptionId === correctOption.id
+          : false;
+
+        if (matchingAnswerRecord) {
+          await prisma.answer.update({
+            where: {
+              id: matchingAnswerRecord.id,
+            },
+            data: {
+              isCorrect,
+            },
+          });
         }
 
-        const finalPercentage = maxPossiblePoints > 0 ? Math.max(0, (pointsEarned / maxPossiblePoints) * 100) : 0;
-        const passed = finalPercentage >= exam.passMark;
-
-        await tx.examAttempt.update({
-          where: { id: attempt.id },
-          data: {
-            score: pointsEarned,
-            percentage: finalPercentage,
-            passed
+        if (exam.markingSystem === "NEGATIVE") {
+          if (isCorrect) {
+            pointsEarned += exam.correctMarks;
+          } else if (chosenOptionId) {
+            pointsEarned -= Math.abs(exam.wrongMarks);
           }
-        });
+        } else if (exam.markingSystem === "CUSTOM") {
+          if (isCorrect) {
+            pointsEarned += exam.correctMarks;
+          }
+        } else {
+          if (isCorrect) {
+            pointsEarned += 1;
+          }
+        }
       }
-    });
 
-    return res.json({ message: "Exam attempts successfully remarked and recalculated." });
+      const finalPercentage =
+        maxPossiblePoints > 0
+          ? Math.max(0, (pointsEarned / maxPossiblePoints) * 100)
+          : 0;
+
+      const passed = finalPercentage >= exam.passMark;
+
+      await prisma.examAttempt.update({
+        where: {
+          id: attempt.id,
+        },
+        data: {
+          score: pointsEarned,
+          percentage: finalPercentage,
+          passed,
+        },
+      });
+    }
+
+    return res.json({
+      message: "Exam attempts successfully remarked and recalculated.",
+    });
   } catch (error) {
     console.error("Retrospective Grading Engine Exception:", error);
-    return res.status(500).json({ message: "Failed to cleanly reassess exam data pools." });
+    return res
+      .status(500)
+      .json({ message: "Failed to cleanly reassess exam data pools." });
   }
 };
